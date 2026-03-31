@@ -29,10 +29,10 @@
   "homepage": "https://github.com/bradford-tech/expo-carplay#readme",
   "dependencies": {},
   "devDependencies": {
-    "@types/react": "~19.1.1",
-    "expo-module-scripts": "^55.0.2",
+    "@types/react": "~19.2.10",
     "expo": "^55.0.8",
-    "react-native": "0.82.1"
+    "expo-module-scripts": "^55.0.2",
+    "react-native": "0.83.4"
   },
   "peerDependencies": {
     "expo": "*",
