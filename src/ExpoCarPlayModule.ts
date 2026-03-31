@@ -1,11 +1,9 @@
 import { NativeModule, requireNativeModule } from 'expo';
 
-import { ExpoCarPlayModuleEvents } from './ExpoCarPlay.types';
-
-declare class ExpoCarPlayModule extends NativeModule<ExpoCarPlayModuleEvents> {
+declare class ExpoCarPlayModule extends NativeModule {
   PI: number;
   hello(): string;
-  setValueAsync(value: string): Promise<void>;
+  setValueAsync(value: string): Promise;
 }
 
 // This call loads the native module object from the JSI.

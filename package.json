@@ -2,36 +2,39 @@
   "name": "expo-carplay",
   "version": "0.1.0",
   "description": "A React Native Expo module for integrating Apple CarPlay navigation templates",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
-  "scripts": {
-    "build": "expo-module build",
-    "clean": "expo-module clean",
-    "lint": "expo-module lint",
-    "test": "expo-module test",
-    "prepare": "expo-module prepare",
-    "prepublishOnly": "expo-module prepublishOnly",
-    "expo-module": "expo-module",
-    "open:ios": "xed example/ios"
-  },
   "keywords": [
     "react-native",
     "expo",
     "expo-carplay",
     "ExpoCarPlay"
   ],
-  "repository": "https://github.com/bradford-tech/expo-carplay",
+  "homepage": "https://github.com/bradford-tech/expo-carplay#readme",
   "bugs": {
     "url": "https://github.com/bradford-tech/expo-carplay/issues"
   },
-  "author": "sbs44 <83440025+sbs44@users.noreply.github.com> (https://github.com/sbs44)",
+  "repository": "https://github.com/bradford-tech/expo-carplay",
   "license": "MIT",
-  "homepage": "https://github.com/bradford-tech/expo-carplay#readme",
-  "dependencies": {},
+  "author": "sbs44 <83440025+sbs44@users.noreply.github.com> (https://github.com/sbs44)",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "expo-module build",
+    "clean": "expo-module clean",
+    "expo-module": "expo-module",
+    "fix": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix -- --cache --max-warnings=0 && tsc --noEmit",
+    "lint": "expo-module lint",
+    "open:ios": "xed example/ios",
+    "prepare": "expo-module prepare",
+    "prepublishOnly": "expo-module prepublishOnly",
+    "test": "expo-module test"
+  },
   "devDependencies": {
     "@types/react": "~19.2.10",
     "expo": "^55.0.8",
     "expo-module-scripts": "^55.0.2",
+    "prettier": "^3.8.1",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "prettier-plugin-packagejson": "^3.0.2",
     "react-native": "0.83.4"
   },
   "peerDependencies": {
@@ -40,3 +43,4 @@
     "react-native": "*"
   }
 }
+
