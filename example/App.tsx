@@ -1,9 +1,24 @@
-import { useCarPlay } from 'expo-carplay';
+import {
+  addConnectListener,
+  createMapTemplate,
+  setRootTemplate,
+  useCarPlay,
+} from 'expo-carplay';
+import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
   const { connected } = useCarPlay();
+
+  useEffect(() => {
+    const subscription = addConnectListener(async () => {
+      const templateId = await createMapTemplate();
+      await setRootTemplate(templateId);
+      console.log('CarPlay: map template set as root');
+    });
+    return () => subscription.remove();
+  }, []);
 
   return (
     <SafeAreaProvider>
