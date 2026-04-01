@@ -9,5 +9,14 @@ import ExpoModulesCore
 public class ExpoCarPlayModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ExpoCarPlay")
+
+    OnCreate {
+      CarPlayEventEmitter.shared.setModule(self)
+    }
+
+    Events(
+      "onConnect",
+      "onDisconnect"
+    )
   }
 }
