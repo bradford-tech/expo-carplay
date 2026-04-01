@@ -8,15 +8,13 @@ import CarPlay
 
 @objc(CarPlaySceneDelegate)
 class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
-  let sessionManager = SceneSessionManager()
-
   // Navigation app variant — receives both interface controller and window
   func templateApplicationScene(
     _ templateApplicationScene: CPTemplateApplicationScene,
     didConnect interfaceController: CPInterfaceController,
     to window: CPWindow
   ) {
-    sessionManager.connect(interfaceController: interfaceController, window: window)
+    SceneSessionManager.shared.connect(interfaceController: interfaceController, window: window)
     CarPlayEventEmitter.shared.emit("onConnect")
   }
 
@@ -25,7 +23,8 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     didDisconnect interfaceController: CPInterfaceController,
     from window: CPWindow
   ) {
-    sessionManager.disconnect()
+    TemplateStore.shared.clear()
+    SceneSessionManager.shared.disconnect()
     CarPlayEventEmitter.shared.emit("onDisconnect")
   }
 }
