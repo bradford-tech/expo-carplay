@@ -19,12 +19,13 @@
   "types": "build/index.d.ts",
   "scripts": {
     "build": "expo-module build",
+    "build:plugin": "expo-module build plugin",
     "clean": "expo-module clean",
     "expo-module": "expo-module",
     "fix": "prettier --write --cache --loglevel warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix && tsc --noEmit",
     "lint": "expo-module lint",
     "open:ios": "xed example/ios",
-    "prepare": "expo-module prepare",
+    "prepare": "expo-module prepare && expo-module build plugin",
     "prepublishOnly": "expo-module prepublishOnly",
     "test": "expo-module test"
   },
