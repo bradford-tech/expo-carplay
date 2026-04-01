@@ -5,7 +5,7 @@ const baseConfig = require('expo-module-scripts/eslint.config.base');
 const globals = require('globals');
 
 module.exports = defineConfig([
-  { ignores: ['build/'] },
+  { ignores: ['build/', 'plugin/build/'] },
   baseConfig,
   { extends: universeWebConfig },
   {
