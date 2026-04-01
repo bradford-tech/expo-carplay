@@ -2,9 +2,9 @@
 // TypeScript interfaces for scene lifecycle events and interface controller state.
 // See: docs/carplay-api-surface.md §1
 
-export type ConnectEvent = Record<string, never>;
+export type ConnectEvent = void;
 
-export type DisconnectEvent = Record<string, never>;
+export type DisconnectEvent = void;
 
 export type CarPlayConnectionState = {
   connected: boolean;

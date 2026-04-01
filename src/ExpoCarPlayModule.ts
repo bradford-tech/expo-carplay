@@ -2,6 +2,13 @@
 // Raw native module binding — no types, no logic.
 // Feature modules (scene/scene.ts, map/map.ts, etc.) wrap these calls with typed APIs.
 
-import { requireNativeModule } from 'expo-modules-core';
+import { type EventSubscription, requireNativeModule } from 'expo-modules-core';
 
-export default requireNativeModule('ExpoCarPlay');
+type ExpoCarPlayModule = {
+  addListener(
+    eventName: 'onConnect' | 'onDisconnect',
+    listener: () => void
+  ): EventSubscription;
+};
+
+export default requireNativeModule<ExpoCarPlayModule>('ExpoCarPlay');
