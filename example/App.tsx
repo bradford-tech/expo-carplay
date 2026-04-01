@@ -1,18 +1,21 @@
 import { useCarPlay } from 'expo-carplay';
-import { SafeAreaView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
   const { connected } = useCarPlay();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>expo-carplay</Text>
-        <Text style={styles.status}>
-          CarPlay: {connected ? 'Connected' : 'Not connected'}
-        </Text>
-      </View>
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.card}>
+          <Text style={styles.title}>expo-carplay</Text>
+          <Text style={styles.status}>
+            CarPlay: {connected ? 'Connected' : 'Not connected'}
+          </Text>
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
