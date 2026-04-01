@@ -3,7 +3,7 @@
 // Maintains cached connection state for synchronous reads by hooks.
 // See: docs/carplay-api-surface.md §1 — Scene Lifecycle & Interface Controller
 
-import { type EventSubscription } from 'expo-modules-core';
+import { EventEmitter, type EventSubscription } from 'expo-modules-core';
 
 import ExpoCarPlay from '../ExpoCarPlayModule';
 import type { ConnectEvent, DisconnectEvent } from './scene.types';
@@ -15,7 +15,7 @@ type SceneEventsMap = {
 
 // In Expo SDK 52+, the native module object IS an EventEmitter.
 // We cast it to a properly-typed emitter so addListener calls are type-safe.
-const emitter = ExpoCarPlay as InstanceType;
+const emitter = ExpoCarPlay as InstanceType<EventEmitter<SceneEventsMap>>;
 
 let connected = false;
 
