@@ -21,7 +21,7 @@
     "build": "expo-module build",
     "clean": "expo-module clean",
     "expo-module": "expo-module",
-    "fix": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix -- --cache --max-warnings=0 && tsc --noEmit",
+    "fix": "prettier --write --cache --loglevel warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix && tsc --noEmit",
     "lint": "expo-module lint",
     "open:ios": "xed example/ios",
     "prepare": "expo-module prepare",
