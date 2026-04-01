@@ -9,6 +9,8 @@ type ExpoCarPlayModule = {
     eventName: 'onConnect' | 'onDisconnect',
     listener: () => void
   ): EventSubscription;
+  createMapTemplate(): Promise<string>;
+  setRootTemplate(templateId: string): Promise<void>;
 };
 
 export default requireNativeModule<ExpoCarPlayModule>('ExpoCarPlay');

@@ -28,3 +28,7 @@ export function addConnectListener(listener: () => void): EventSubscription {
 export function addDisconnectListener(listener: () => void): EventSubscription {
   return ExpoCarPlay.addListener('onDisconnect', listener);
 }
+
+export async function setRootTemplate(templateId: string): Promise<void> {
+  await ExpoCarPlay.setRootTemplate(templateId);
+}
