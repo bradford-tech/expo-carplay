@@ -1,10 +1,7 @@
-import { NativeModule, requireNativeModule } from 'expo';
+// ExpoCarPlayModule.ts
+// Raw native module binding — no types, no logic.
+// Feature modules (scene/scene.ts, map/map.ts, etc.) wrap these calls with typed APIs.
 
-declare class ExpoCarPlayModule extends NativeModule {
-  PI: number;
-  hello(): string;
-  setValueAsync(value: string): Promise;
-}
+import { requireNativeModule } from 'expo-modules-core';
 
-// This call loads the native module object from the JSI.
-export default requireNativeModule<ExpoCarPlayModule>('ExpoCarPlay');
+export default requireNativeModule('ExpoCarPlay');

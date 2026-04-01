@@ -1,73 +1,41 @@
-import { useEvent } from 'expo';
-import ExpoCarPlay, { ExpoCarPlayView } from 'expo-carplay';
-import { Button, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { useCarPlay } from 'expo-carplay';
+import { SafeAreaView, Text, View } from 'react-native';
 
 export default function App() {
-  const onChangePayload = useEvent(ExpoCarPlay, 'onChange');
+  const { connected } = useCarPlay();
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.container}>
-        <Text style={styles.header}>Module API Example</Text>
-        <Group name="Constants">
-          <Text>{ExpoCarPlay.PI}</Text>
-        </Group>
-        <Group name="Functions">
-          <Text>{ExpoCarPlay.hello()}</Text>
-        </Group>
-        <Group name="Async functions">
-          <Button
-            title="Set value"
-            onPress={async () => {
-              await ExpoCarPlay.setValueAsync('Hello from JS!');
-            }}
-          />
-        </Group>
-        <Group name="Events">
-          <Text>{onChangePayload?.value}</Text>
-        </Group>
-        <Group name="Views">
-          <ExpoCarPlayView
-            url="https://www.example.com"
-            onLoad={({ nativeEvent: { url } }) => console.log(`Loaded: ${url}`)}
-            style={styles.view}
-          />
-        </Group>
-      </ScrollView>
+      <View style={styles.card}>
+        <Text style={styles.title}>expo-carplay</Text>
+        <Text style={styles.status}>
+          CarPlay: {connected ? 'Connected' : 'Not connected'}
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
 
-function Group(props: { name: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.group}>
-      <Text style={styles.groupHeader}>{props.name}</Text>
-      {props.children}
-    </View>
-  );
-}
-
 const styles = {
-  header: {
-    fontSize: 30,
-    margin: 20,
-  },
-  groupHeader: {
-    fontSize: 20,
-    marginBottom: 20,
-  },
-  group: {
-    margin: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-  },
   container: {
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
-  view: {
-    flex: 1,
-    height: 200,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center' as const,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '600' as const,
+    marginBottom: 8,
+  },
+  status: {
+    fontSize: 16,
+    color: '#666',
   },
 };
