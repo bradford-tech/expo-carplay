@@ -22,7 +22,7 @@
     "build:plugin": "expo-module build plugin",
     "clean": "expo-module clean",
     "expo-module": "expo-module",
-    "fix": "prettier --write --cache --loglevel warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix && tsc --noEmit",
+    "fix": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix && tsc --noEmit",
     "lint": "expo-module lint",
     "open:ios": "xed example/ios",
     "prepare": "expo-module prepare && expo-module build plugin",
@@ -33,7 +33,7 @@
     "@types/react": "~19.2.10",
     "expo": "^55.0.8",
     "expo-module-scripts": "^55.0.2",
-    "prettier": "^3.8.1",
+    "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-packagejson": "^3.0.2",
     "react-native": "0.83.4"
@@ -44,4 +44,3 @@
     "react-native": "*"
   }
 }
-

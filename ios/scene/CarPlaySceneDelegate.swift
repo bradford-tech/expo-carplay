@@ -15,6 +15,7 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     to window: CPWindow
   ) {
     SceneSessionManager.shared.connect(interfaceController: interfaceController, window: window)
+    window.rootViewController = CarPlayMapViewController()
     CarPlayEventEmitter.shared.emit("onConnect")
   }
 

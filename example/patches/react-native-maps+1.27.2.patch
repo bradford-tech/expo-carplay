@@ -1,0 +1,965 @@
+diff --git a/node_modules/react-native-maps/dist/src/MapView.d.ts b/node_modules/react-native-maps/dist/src/MapView.d.ts
+index 2c9f5f8..39dc282 100644
+--- a/node_modules/react-native-maps/dist/src/MapView.d.ts
++++ b/node_modules/react-native-maps/dist/src/MapView.d.ts
+@@ -1,5 +1,5 @@
+ import * as React from 'react';
+-import { Animated as RNAnimated, Animated, type NativeSyntheticEvent, type ViewProps } from 'react-native';
++import { Animated as RNAnimated, Animated, type ColorValue, type NativeSyntheticEvent, type ViewProps } from 'react-native';
+ import type { CalloutPressEvent, ClickEvent, Frame, LatLng, MarkerDeselectEvent, MarkerDragEvent, MarkerDragStartEndEvent, MarkerPressEvent, MarkerSelectEvent, Point, Provider, Region, MKPointOfInterestCategoryType } from './sharedTypes';
+ import type { ActiveIndoorLevel, Address, BoundingBox, Camera, CameraZoomRange, ChangeEvent, Details, EdgePadding, FitToOptions, IndoorBuilding, KmlMapEvent, LongPressEvent, MapPressEvent, MapStyleElement, MapType, MapTypes, PanDragEvent, PoiClickEvent, SnapshotOptions, UserLocationChangeEvent } from './MapView.types';
+ import type { Modify } from './sharedTypesInternal';
+@@ -551,6 +551,42 @@ export type MapViewProps = ViewProps & {
+      * @platform Android: Not supported
+      */
+     userLocationCalloutEnabled?: boolean;
++    /**
++     * An SF Symbol name to use as the user location indicator instead of the default blue dot.
++     * The symbol rotates to match the user's heading.
++     *
++     * @platform iOS: Apple Maps only
++     * @platform Android: Not supported
++     */
++    userLocationImage?: string;
++    /**
++     * The color of the user location image.
++     *
++     * @default System Blue
++     * @platform iOS: Apple Maps only
++     * @platform Android: Not supported
++     */
++    userLocationImageColor?: ColorValue;
++    /**
++     * The point size of the user location image.
++     *
++     * @default 22
++     * @platform iOS: Apple Maps only
++     * @platform Android: Not supported
++     */
++    userLocationImageSize?: number;
++    /**
++     * Route polyline coordinates for native navigation cursor snapping.
++     * When set, the user location annotation snaps to the nearest point on this polyline.
++     * When cleared, the default blue dot is restored.
++     *
++     * @platform iOS: Apple Maps only
++     * @platform Android: Not supported
++     */
++    navigationRouteCoordinates?: ReadonlyArray<{
++        latitude: number;
++        longitude: number;
++    }>;
+     /**
+      * Fastest interval the application will actively acquire locations.
+      *
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMap.h b/node_modules/react-native-maps/ios/AirMaps/AIRMap.h
+index 17c1755..5b61afd 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMap.h
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMap.h
+@@ -23,13 +23,48 @@ extern const NSTimeInterval AIRMapRegionChangeObserveInterval;
+ extern const CGFloat AIRMapZoomBoundBuffer;
+ extern const NSInteger AIRMapMaxZoomLevel;
+ 
++// Great-circle bearing between two coordinates, in degrees [0, 360).
++// Shared by AIRMap.mm (cursor init) and AIRMapManager.m (camera heading, cursor snap).
++static inline CLLocationDirection AIRMapBearing(CLLocationCoordinate2D start, CLLocationCoordinate2D end) {
++    double dLon = (end.longitude - start.longitude) * M_PI / 180.0;
++    double lat1 = start.latitude * M_PI / 180.0;
++    double lat2 = end.latitude * M_PI / 180.0;
++    double y = sin(dLon) * cos(lat2);
++    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon);
++    double bearing = atan2(y, x) * 180.0 / M_PI;
++    return fmod(bearing + 360.0, 360.0);
++}
++
++@interface NavigationCursorAnnotation : MKPointAnnotation
++@property (nonatomic, assign) CLLocationDirection heading;
++@property (nonatomic, assign) BOOL isSnappedToRoute;
++@end
++
+ @interface AIRMap: MKMapView<SMCalloutViewDelegate>
++{
++    @package
++    BOOL _navigationCursorActive;
++    NavigationCursorAnnotation *_cursorAnnotation;
++    MKMapPoint *_routeMapPoints;
++    NSInteger _routePointCount;
++    NSInteger _lastMatchedIndex;
++    CLLocationDirection _lastKnownBearing;
++    CLLocationCoordinate2D _lastMatchedGPS;
++#ifdef DEBUG
++    int _navLogCounter;
++    CLLocationDirection _prevLoggedCourse;
++#endif
++}
+ 
+ @property (nonatomic, strong) SMCalloutView *calloutView;
+ @property (nonatomic, strong) UIImageView *cacheImageView;
+ @property (nonatomic, strong) UIView *loadingView;
+ 
+ @property (nonatomic, copy) NSString *userLocationAnnotationTitle;
++@property (nonatomic, copy) NSString *userLocationImage;
++@property (nonatomic, strong) UIColor *userLocationImageColor;
++@property (nonatomic, assign) CGFloat userLocationImageSize;
++@property (nonatomic, strong) NSArray *navigationRouteCoordinates;
+ @property (nonatomic, assign) BOOL followsUserLocation;
+ @property (nonatomic, assign) BOOL userLocationCalloutEnabled;
+ @property (nonatomic, assign) BOOL hasStartedRendering;
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm b/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm
+index f7da1e0..6a33ccd 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm
+@@ -73,6 +73,9 @@ const NSInteger AIRMapMaxZoomLevel = 20;
+     // https://github.com/facebook/react-native/blob/v0.16.0/Libraries/Text/RCTTextField.m#L20
+     NSMutableArray<UIView *> *_reactSubviews;
+ }
++@synthesize userLocationImage = _userLocationImage;
++@synthesize userLocationImageColor = _userLocationImageColor;
++@synthesize userLocationImageSize = _userLocationImageSize;
+ 
+ - (instancetype)init
+ {
+@@ -531,6 +534,111 @@ const NSInteger AIRMapMaxZoomLevel = 20;
+     }
+ }
+ 
++- (void)_refreshUserLocationAnnotation
++{
++    if (self.showsUserLocation) {
++        [NSObject cancelPreviousPerformRequestsWithTarget:self
++            selector:@selector(_doRefreshUserLocationAnnotation) object:nil];
++        [self performSelector:@selector(_doRefreshUserLocationAnnotation)
++            withObject:nil afterDelay:0];
++    }
++}
++
++- (void)_doRefreshUserLocationAnnotation
++{
++    super.showsUserLocation = NO;
++    super.showsUserLocation = YES;
++}
++
++- (void)setUserLocationImage:(NSString *)userLocationImage
++{
++    _userLocationImage = [userLocationImage copy];
++    [self _refreshUserLocationAnnotation];
++}
++
++- (void)setUserLocationImageColor:(UIColor *)userLocationImageColor
++{
++    _userLocationImageColor = userLocationImageColor;
++    [self _refreshUserLocationAnnotation];
++}
++
++- (void)setUserLocationImageSize:(CGFloat)userLocationImageSize
++{
++    _userLocationImageSize = userLocationImageSize;
++    [self _refreshUserLocationAnnotation];
++}
++
++- (void)setNavigationRouteCoordinates:(NSArray *)navigationRouteCoordinates
++{
++    // Free previous polyline
++    if (_routeMapPoints) {
++        free(_routeMapPoints);
++        _routeMapPoints = NULL;
++        _routePointCount = 0;
++    }
++
++    _navigationRouteCoordinates = navigationRouteCoordinates;
++
++    if (navigationRouteCoordinates && navigationRouteCoordinates.count >= 2) {
++        // Parse into MKMapPoint C array for fast projection math
++        _routePointCount = navigationRouteCoordinates.count;
++        _routeMapPoints = (MKMapPoint *)malloc(sizeof(MKMapPoint) * _routePointCount);
++        if (!_routeMapPoints) {
++            _routePointCount = 0;
++            _navigationCursorActive = NO;
++            return;
++        }
++        for (NSInteger i = 0; i < _routePointCount; i++) {
++            NSDictionary *coord = navigationRouteCoordinates[i];
++            double lat = [coord[@"latitude"] doubleValue];
++            double lng = [coord[@"longitude"] doubleValue];
++            _routeMapPoints[i] = MKMapPointForCoordinate(CLLocationCoordinate2DMake(lat, lng));
++        }
++
++        // Activate cursor
++        _navigationCursorActive = YES;
++        _lastMatchedIndex = 0;
++        _lastMatchedGPS = kCLLocationCoordinate2DInvalid;
++
++        // Initialize bearing from first segment
++        if (_routePointCount >= 2) {
++            CLLocationCoordinate2D start = MKCoordinateForMapPoint(_routeMapPoints[0]);
++            CLLocationCoordinate2D end = MKCoordinateForMapPoint(_routeMapPoints[1]);
++            _lastKnownBearing = AIRMapBearing(start, end);
++        }
++
++        // Add cursor annotation if not already present
++        if (!_cursorAnnotation) {
++            _cursorAnnotation = [[NavigationCursorAnnotation alloc] init];
++            _cursorAnnotation.isSnappedToRoute = YES;
++            _cursorAnnotation.heading = _lastKnownBearing;
++            CLLocationCoordinate2D firstCoord = MKCoordinateForMapPoint(_routeMapPoints[0]);
++            _cursorAnnotation.coordinate = firstCoord;
++            [self addAnnotation:_cursorAnnotation];
++        }
++
++        // Refresh user location annotation to hide blue dot
++        [self _refreshUserLocationAnnotation];
++    } else {
++        // Deactivate cursor
++        _navigationCursorActive = NO;
++        if (_cursorAnnotation) {
++            [self removeAnnotation:_cursorAnnotation];
++            _cursorAnnotation = nil;
++        }
++        // Refresh user location annotation to restore blue dot
++        [self _refreshUserLocationAnnotation];
++    }
++}
++
++- (void)dealloc
++{
++    if (_routeMapPoints) {
++        free(_routeMapPoints);
++        _routeMapPoints = NULL;
++    }
++}
++
+ - (void)setUserInterfaceStyle:(NSString*)userInterfaceStyle
+ {
+         if([userInterfaceStyle isEqualToString:@"light"]) {
+@@ -549,7 +657,21 @@ const NSInteger AIRMapMaxZoomLevel = 20;
+ 
+ - (void)setFollowsUserLocation:(BOOL)followsUserLocation
+ {
++    BOOL changed = (_followsUserLocation != followsUserLocation);
+     _followsUserLocation = followsUserLocation;
++
++    if (!changed) return; // Fabric calls this on every render — skip if unchanged
++
++    if (followsUserLocation) {
++#ifdef DEBUG
++        NSLog(@"[AIRMap:TRACK] followsUserLocation=YES, nav camera active");
++#endif
++        // Camera is managed per-location-update in AIRMapManager.m
++    } else {
++#ifdef DEBUG
++        NSLog(@"[AIRMap:TRACK] followsUserLocation=NO");
++#endif
++    }
+ }
+ 
+ - (void)setUserLocationCalloutEnabled:(BOOL)calloutEnabled
+@@ -569,6 +691,11 @@ const NSInteger AIRMapMaxZoomLevel = 20;
+ 
+ - (void)setRegion:(MKCoordinateRegion)region animated:(BOOL)animated
+ {
++    if (_followsUserLocation) {
++        // Don't allow region changes to override the navigation camera
++        return;
++    }
++
+     // If location is invalid, abort
+     if (!CLLocationCoordinate2DIsValid(region.center)) {
+         return;
+@@ -995,6 +1122,53 @@ const NSInteger AIRMapMaxZoomLevel = 20;
+ - (void)layoutSubviews {
+     [super layoutSubviews];
+     [self cacheViewIfNeeded];
++    // Synchronously reposition Apple logo and legal label after every layout pass.
++    // MKMapView's Auto Layout constraints override frame changes made via dispatch_async
++    // (the default react-native-maps approach). By repositioning synchronously here and
++    // setting translatesAutoresizingMaskIntoConstraints, we ensure the insets stick.
++    // Uses cached _appleLogo/_legalLabel ivars; re-scans only if the cached view left the hierarchy.
++    if (_appleLogoInsets.top || _appleLogoInsets.left || _appleLogoInsets.bottom || _appleLogoInsets.right) {
++        if (!_appleLogo || ![_appleLogo isDescendantOfView:self]) {
++            _appleLogo = nil;
++            for (UIView *subview in self.subviews) {
++                NSString *className = NSStringFromClass(subview.class);
++                if ([className isEqualToString:@"MKAppleLogoImageView"] ||
++                    [className containsString:@"Logo"]) {
++                    _appleLogo = subview;
++                    break;
++                }
++            }
++        }
++        if (_appleLogo) {
++            _appleLogo.translatesAutoresizingMaskIntoConstraints = YES;
++            CGRect frame = _appleLogo.frame;
++            if (_appleLogoInsets.left) frame.origin.x = _appleLogoInsets.left;
++            else if (_appleLogoInsets.right) frame.origin.x = self.frame.size.width - _appleLogoInsets.right - frame.size.width;
++            if (_appleLogoInsets.top) frame.origin.y = _appleLogoInsets.top;
++            else if (_appleLogoInsets.bottom) frame.origin.y = self.frame.size.height - _appleLogoInsets.bottom - frame.size.height;
++            _appleLogo.frame = frame;
++        }
++    }
++    if (_legalLabelInsets.top || _legalLabelInsets.left || _legalLabelInsets.bottom || _legalLabelInsets.right) {
++        if (!_legalLabel || ![_legalLabel isDescendantOfView:self]) {
++            _legalLabel = nil;
++            for (UIView *subview in self.subviews) {
++                if ([NSStringFromClass(subview.class) isEqualToString:@"MKAttributionLabel"]) {
++                    _legalLabel = subview;
++                    break;
++                }
++            }
++        }
++        if (_legalLabel) {
++            _legalLabel.translatesAutoresizingMaskIntoConstraints = YES;
++            CGRect frame = _legalLabel.frame;
++            if (_legalLabelInsets.left) frame.origin.x = _legalLabelInsets.left;
++            else if (_legalLabelInsets.right) frame.origin.x = self.frame.size.width - _legalLabelInsets.right - frame.size.width;
++            if (_legalLabelInsets.top) frame.origin.y = _legalLabelInsets.top;
++            else if (_legalLabelInsets.bottom) frame.origin.y = self.frame.size.height - _legalLabelInsets.bottom - frame.size.height;
++            _legalLabel.frame = frame;
++        }
++    }
+ }
+ 
+ // based on https://medium.com/@dmytrobabych/getting-actual-rotation-and-zoom-level-for-mapkit-mkmapview-e7f03f430aa9
+@@ -1128,3 +1302,6 @@ const NSInteger AIRMapMaxZoomLevel = 20;
+ }
+ 
+ @end
++
++@implementation NavigationCursorAnnotation
++@end
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m b/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m
+index d034034..65a26a8 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m
+@@ -32,6 +32,48 @@
+ 
+ static NSString *const RCTMapViewKey = @"MapView";
+ 
++#pragma mark - Navigation Cursor Snapping
++
++static const CLLocationDistance kSnapOffThreshold = 15.0;
++static const CLLocationDistance kSnapOnThreshold  =  8.0;
++static const CLLocationDistance kFullScanMovementThreshold = 50.0;
++static const NSInteger kWindowRadius = 10;
++
++static MKMapPoint projectPointOntoSegment(MKMapPoint point, MKMapPoint segStart, MKMapPoint segEnd) {
++    double dx = segEnd.x - segStart.x;
++    double dy = segEnd.y - segStart.y;
++    double lengthSq = dx * dx + dy * dy;
++    if (lengthSq == 0) return segStart;
++    double t = fmax(0, fmin(1,
++        ((point.x - segStart.x) * dx + (point.y - segStart.y) * dy) / lengthSq
++    ));
++    return MKMapPointMake(segStart.x + t * dx, segStart.y + t * dy);
++}
++
++typedef struct {
++    MKMapPoint projectedPoint;
++    double perpDistance;
++    NSInteger segmentIndex;
++} SnapResult;
++
++// bearingBetweenCoordinates consolidated into AIRMapBearing() in AIRMap.h
++
++static SnapResult findClosestSegment(MKMapPoint userPoint, MKMapPoint *polyline, NSInteger pointCount, NSInteger fromIndex, NSInteger toIndex) {
++    SnapResult best = { .projectedPoint = userPoint, .perpDistance = DBL_MAX, .segmentIndex = -1 };
++    if (fromIndex < 0) fromIndex = 0;
++    if (toIndex >= pointCount - 1) toIndex = pointCount - 2;
++
++    for (NSInteger i = fromIndex; i <= toIndex; i++) {
++        MKMapPoint projected = projectPointOntoSegment(userPoint, polyline[i], polyline[i + 1]);
++        double dist = MKMetersBetweenMapPoints(userPoint, projected);
++        if (dist < best.perpDistance) {
++            best.perpDistance = dist;
++            best.projectedPoint = projected;
++            best.segmentIndex = i;
++        }
++    }
++    return best;
++}
+ 
+ @interface AIRMapManager() <MKMapViewDelegate, UIGestureRecognizerDelegate>
+ 
+@@ -86,6 +128,10 @@ RCT_REMAP_VIEW_PROPERTY(testID, accessibilityIdentifier, NSString)
+ RCT_EXPORT_VIEW_PROPERTY(showsUserLocation, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(tintColor, UIColor)
+ RCT_EXPORT_VIEW_PROPERTY(userLocationAnnotationTitle, NSString)
++RCT_EXPORT_VIEW_PROPERTY(userLocationImage, NSString)
++RCT_EXPORT_VIEW_PROPERTY(userLocationImageColor, UIColor)
++RCT_EXPORT_VIEW_PROPERTY(userLocationImageSize, CGFloat)
++RCT_EXPORT_VIEW_PROPERTY(navigationRouteCoordinates, NSArray)
+ RCT_EXPORT_VIEW_PROPERTY(userInterfaceStyle, NSString)
+ RCT_EXPORT_VIEW_PROPERTY(followsUserLocation, BOOL)
+ RCT_EXPORT_VIEW_PROPERTY(userLocationCalloutEnabled, BOOL)
+@@ -795,13 +841,135 @@ RCT_EXPORT_METHOD(getAddressFromCoordinates:(nonnull NSNumber *)reactTag
+     }
+ }
+ 
++- (void)_updateNavigationCursorRotation:(AIRMap *)mapView {
++    if (!mapView->_navigationCursorActive || !mapView->_cursorAnnotation) return;
++    MKAnnotationView *cursorView = [mapView viewForAnnotation:mapView->_cursorAnnotation];
++    if (!cursorView) return;
++
++    CLLocationDirection bearing = mapView->_cursorAnnotation.heading;
++    CLLocationDirection mapHeading = mapView.camera.heading;
++    CGFloat rotationRadians = (bearing - mapHeading) * M_PI / 180.0;
++    cursorView.transform = CGAffineTransformMakeRotation(rotationRadians);
++}
++
++- (void)_updateUserLocationArrowRotation:(AIRMap *)mapView {
++    // Only used when NOT in navigation cursor mode (standalone arrow without route snapping)
++    if (mapView->_navigationCursorActive) return;
++
++    MKAnnotationView *userView = [mapView viewForAnnotation:mapView.userLocation];
++    if (!userView) return;
++
++    CLLocationDirection course = mapView.userLocation.location.course;
++    if (course < 0) return; // No valid heading; keep last rotation
++
++    CLLocationDirection mapHeading = mapView.camera.heading;
++    CGFloat rotationRadians = (course - mapHeading) * M_PI / 180.0;
++    userView.transform = CGAffineTransformMakeRotation(rotationRadians);
++}
++
+ - (MKAnnotationView *)mapView:(__unused AIRMap *)mapView viewForAnnotation:(AIRMapMarker *)marker
+ {
+     if (![marker isKindOfClass:[AIRMapMarker class]]) {
+-        if ([marker isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil) {
+-            [(MKUserLocation*)marker setTitle: mapView.userLocationAnnotationTitle];
+-            return nil;
++        // --- NavigationCursorAnnotation: SF Symbol arrow on snapped position ---
++        if ([marker isKindOfClass:[NavigationCursorAnnotation class]]) {
++            NavigationCursorAnnotation *cursor = (NavigationCursorAnnotation *)marker;
++            MKAnnotationView *cursorView = [[MKAnnotationView alloc]
++                initWithAnnotation:marker
++                   reuseIdentifier:@"navigationCursor"];
++
++            CGFloat pointSize = mapView.userLocationImageSize > 0 ? mapView.userLocationImageSize : 22;
++            UIColor *color = mapView.userLocationImageColor ?: [UIColor systemBlueColor];
++            NSString *symbolName = (mapView.userLocationImage && mapView.userLocationImage.length > 0)
++                ? mapView.userLocationImage : @"location.north.fill";
++
++            UIImageSymbolConfiguration *sizeConfig = [UIImageSymbolConfiguration
++                configurationWithPointSize:pointSize
++                                    weight:UIImageSymbolWeightBold];
++            UIImage *templateImage = [UIImage systemImageNamed:symbolName
++                                              withConfiguration:sizeConfig];
++            if (!templateImage) {
++                return nil;
++            }
++
++            // MKAnnotationView ignores SF Symbol configs. Rasterize into a bitmap.
++            UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
++            UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc]
++                initWithSize:templateImage.size format:format];
++            UIImage *coloredImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
++                CGRect rect = CGRectMake(0, 0, templateImage.size.width, templateImage.size.height);
++                [templateImage drawInRect:rect];
++                [color setFill];
++                UIRectFillUsingBlendMode(rect, kCGBlendModeSourceAtop);
++            }];
++
++            cursorView.image = coloredImage;
++            cursorView.zPriority = MKAnnotationViewZPriorityMax;
++
++            // Set initial rotation
++            CLLocationDirection mapHeading = mapView.camera.heading;
++            CGFloat rotation = (cursor.heading - mapHeading) * M_PI / 180.0;
++            cursorView.transform = CGAffineTransformMakeRotation(rotation);
++
++            return cursorView;
+         }
++
++        // --- MKUserLocation: hide when cursor active, default blue dot otherwise ---
++        if ([marker isKindOfClass:[MKUserLocation class]]) {
++            if (mapView.userLocationAnnotationTitle != nil) {
++                [(MKUserLocation*)marker setTitle: mapView.userLocationAnnotationTitle];
++            }
++
++            if (mapView->_navigationCursorActive) {
++                // Hide the blue dot — belt and suspenders
++                MKAnnotationView *hidden = [[MKAnnotationView alloc]
++                    initWithAnnotation:(id<MKAnnotation>)marker
++                       reuseIdentifier:@"hiddenUserLocation"];
++                hidden.frame = CGRectZero;
++                hidden.hidden = YES;
++                hidden.alpha = 0;
++                return hidden;
++            }
++
++            // Not in cursor mode — check if userLocationImage is set (standalone arrow without snapping)
++            if (mapView.userLocationImage == nil || mapView.userLocationImage.length == 0) {
++                return nil; // Default blue dot
++            }
++
++            // Standalone SF Symbol arrow (no route snapping)
++            MKAnnotationView *userView = [[MKAnnotationView alloc]
++                initWithAnnotation:(id<MKAnnotation>)marker
++                   reuseIdentifier:@"userLocation"];
++            CGFloat pointSize = mapView.userLocationImageSize > 0 ? mapView.userLocationImageSize : 22;
++            UIColor *color = mapView.userLocationImageColor ?: [UIColor systemBlueColor];
++            UIImageSymbolConfiguration *sizeConfig = [UIImageSymbolConfiguration
++                configurationWithPointSize:pointSize
++                                    weight:UIImageSymbolWeightBold];
++            UIImage *templateImage = [UIImage systemImageNamed:mapView.userLocationImage
++                                              withConfiguration:sizeConfig];
++            if (!templateImage) {
++                return nil;
++            }
++            UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
++            UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc]
++                initWithSize:templateImage.size format:format];
++            UIImage *coloredImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
++                CGRect rect = CGRectMake(0, 0, templateImage.size.width, templateImage.size.height);
++                [templateImage drawInRect:rect];
++                [color setFill];
++                UIRectFillUsingBlendMode(rect, kCGBlendModeSourceAtop);
++            }];
++            userView.image = coloredImage;
++            userView.zPriority = MKAnnotationViewZPriorityMax;
++
++            CLLocationDirection course = [(MKUserLocation*)marker location].course;
++            if (course >= 0) {
++                CLLocationDirection mapHeading = mapView.camera.heading;
++                CGFloat rotation = (course - mapHeading) * M_PI / 180.0;
++                userView.transform = CGAffineTransformMakeRotation(rotation);
++            }
++            return userView;
++        }
++
+         return nil;
+     }
+ 
+@@ -906,10 +1074,175 @@ static int kDragCenterContext;
+         mapView.onUserLocationChange(event);
+     }
+ 
++    // Navigation camera: center on user, heading from GPS course, tilted and zoomed.
++    // We manage the camera directly instead of using MKUserTrackingMode because
++    // tracking mode conflicts with programmatic setCamera calls.
+     if (mapView.followsUserLocation) {
+-        [mapView setCenterCoordinate:location.coordinate animated:YES];
++        CLLocationCoordinate2D coord = location.location.coordinate;
++        CLLocationDirection course = location.location.course;
++        CLLocationDirection currentHeading = mapView.camera.heading;
++
++        // Use route-derived bearing when navigation cursor is active (much smoother
++        // than GPS course). Falls back to GPS course when off-route or cursor inactive.
++        CLLocationDirection targetHeading = course;
++        if (mapView->_navigationCursorActive && mapView->_routeMapPoints && mapView->_routePointCount > 1) {
++            MKMapPoint userPoint = MKMapPointForCoordinate(coord);
++            NSInteger windowStart = mapView->_lastMatchedIndex - kWindowRadius;
++            NSInteger windowEnd = mapView->_lastMatchedIndex + kWindowRadius;
++            SnapResult snapResult = findClosestSegment(userPoint, mapView->_routeMapPoints, mapView->_routePointCount, windowStart, windowEnd);
++
++            if (snapResult.segmentIndex >= 0 && snapResult.perpDistance < kSnapOffThreshold) {
++                NSInteger idx = snapResult.segmentIndex;
++                if (idx < mapView->_routePointCount - 1) {
++                    CLLocationCoordinate2D segStart = MKCoordinateForMapPoint(mapView->_routeMapPoints[idx]);
++                    CLLocationCoordinate2D segEnd = MKCoordinateForMapPoint(mapView->_routeMapPoints[idx + 1]);
++                    targetHeading = AIRMapBearing(segStart, segEnd);
++                }
++            }
++        }
++
++        // Smooth heading with adaptive interpolation.
++        CLLocationDirection heading = currentHeading;
++        if (targetHeading >= 0) {
++            double delta = targetHeading - currentHeading;
++            if (delta > 180) delta -= 360;
++            if (delta < -180) delta += 360;
++            if (fabs(delta) > 2.0) {
++                double factor;
++                if (fabs(delta) > 45.0) {
++                    factor = 1.0;
++                } else if (fabs(delta) > 20.0) {
++                    factor = 0.7;
++                } else if (fabs(delta) > 8.0) {
++                    factor = 0.5;
++                } else {
++                    factor = 0.3;
++                }
++                heading = currentHeading + delta * factor;
++                if (heading < 0) heading += 360;
++                if (heading >= 360) heading -= 360;
++            }
++        }
++
++        MKMapCamera *navCamera = [MKMapCamera cameraLookingAtCenterCoordinate:coord
++                                                                 fromDistance:500
++                                                                       pitch:60
++                                                                     heading:heading];
++        [UIView animateWithDuration:1.0
++                              delay:0
++                            options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState
++                         animations:^{
++            mapView.camera = navCamera;
++        } completion:nil];
++    }
++
++#ifdef DEBUG
++    // Debug logging — uses instance variables _navLogCounter and _prevLoggedCourse
++    // on AIRMap to avoid static variable sharing across multiple map instances.
++    mapView->_navLogCounter++;
++    if (mapView->_navLogCounter % 5 == 0) {
++        MKMapCamera *cam = mapView.camera;
++        CLLocationDirection gpsCourse = location.location.course;
++        CLLocationDirection camHeading = cam.heading;
++        double drift = 0;
++        if (gpsCourse >= 0) {
++            drift = camHeading - gpsCourse;
++            if (drift > 180) drift -= 360;
++            if (drift < -180) drift += 360;
++        }
++        double courseJitter = 0;
++        if (mapView->_prevLoggedCourse >= 0 && gpsCourse >= 0) {
++            courseJitter = gpsCourse - mapView->_prevLoggedCourse;
++            if (courseJitter > 180) courseJitter -= 360;
++            if (courseJitter < -180) courseJitter += 360;
++        }
++        mapView->_prevLoggedCourse = gpsCourse;
++
++        BOOL usingRoute = (mapView->_navigationCursorActive && mapView->_routeMapPoints);
++        NSLog(@"[AIRMap:NAV] gps_h=%.0f cam_h=%.0f drift=%+.0f jitter=%+.0f src=%s",
++              gpsCourse, camHeading, drift, courseJitter,
++              usingRoute ? "route" : "gps");
+     }
++#endif
++
++    [self _updateUserLocationArrowRotation:mapView];
++
++    // --- Navigation cursor snapping ---
++    if (mapView->_navigationCursorActive && mapView->_cursorAnnotation && mapView->_routeMapPoints) {
++        CLLocationCoordinate2D rawCoord = mapView.userLocation.location.coordinate;
++        MKMapPoint userPoint = MKMapPointForCoordinate(rawCoord);
++
++        // Sliding window search
++        NSInteger windowStart = mapView->_lastMatchedIndex - kWindowRadius;
++        NSInteger windowEnd = mapView->_lastMatchedIndex + kWindowRadius;
++        SnapResult result = findClosestSegment(userPoint, mapView->_routeMapPoints, mapView->_routePointCount, windowStart, windowEnd);
++
++        // Lazy full scan fallback: only if window failed AND GPS moved significantly
++        if (result.segmentIndex < 0 || result.perpDistance > kSnapOffThreshold) {
++            BOOL gpsMoved = NO;
++            if (CLLocationCoordinate2DIsValid(mapView->_lastMatchedGPS)) {
++                CLLocation *lastLoc = [[CLLocation alloc] initWithLatitude:mapView->_lastMatchedGPS.latitude
++                                                                 longitude:mapView->_lastMatchedGPS.longitude];
++                CLLocation *currentLoc = [[CLLocation alloc] initWithLatitude:rawCoord.latitude
++                                                                    longitude:rawCoord.longitude];
++                gpsMoved = [currentLoc distanceFromLocation:lastLoc] >= kFullScanMovementThreshold;
++            } else {
++                gpsMoved = YES; // First update — always do full scan
++            }
++
++            if (gpsMoved) {
++                SnapResult fullResult = findClosestSegment(userPoint, mapView->_routeMapPoints, mapView->_routePointCount, 0, mapView->_routePointCount - 2);
++                if (fullResult.perpDistance < result.perpDistance) {
++                    result = fullResult;
++                }
++            }
++        }
++
++        // Hysteresis
++        BOOL shouldSnap;
++        if (mapView->_cursorAnnotation.isSnappedToRoute) {
++            shouldSnap = (result.segmentIndex >= 0 && result.perpDistance <= kSnapOffThreshold);
++        } else {
++            shouldSnap = (result.segmentIndex >= 0 && result.perpDistance <= kSnapOnThreshold);
++        }
+ 
++        // Compute target position and bearing
++        CLLocationCoordinate2D targetCoord;
++        CLLocationDirection targetBearing;
++
++        if (shouldSnap && result.segmentIndex >= 0) {
++            targetCoord = MKCoordinateForMapPoint(result.projectedPoint);
++            // Bearing of the matched segment
++            CLLocationCoordinate2D segStart = MKCoordinateForMapPoint(mapView->_routeMapPoints[result.segmentIndex]);
++            CLLocationCoordinate2D segEnd = MKCoordinateForMapPoint(mapView->_routeMapPoints[result.segmentIndex + 1]);
++            targetBearing = AIRMapBearing(segStart, segEnd);
++            mapView->_lastMatchedIndex = result.segmentIndex;
++            mapView->_lastMatchedGPS = rawCoord;
++            mapView->_lastKnownBearing = targetBearing;
++            mapView->_cursorAnnotation.isSnappedToRoute = YES;
++        } else {
++            targetCoord = rawCoord;
++            CLLocationDirection course = mapView.userLocation.location.course;
++            targetBearing = (course >= 0) ? course : mapView->_lastKnownBearing;
++            mapView->_cursorAnnotation.isSnappedToRoute = NO;
++        }
++
++        // Animate position + rotation over ~1 GPS cycle for continuous smooth motion
++        mapView->_cursorAnnotation.heading = targetBearing;
++        [UIView animateWithDuration:1.0
++                              delay:0
++                            options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
++                         animations:^{
++            mapView->_cursorAnnotation.coordinate = targetCoord;
++            // Animate rotation inside the same block for smooth turning
++            MKAnnotationView *cursorView = [mapView viewForAnnotation:mapView->_cursorAnnotation];
++            if (cursorView) {
++                CLLocationDirection mapHeading = mapView.camera.heading;
++                CGFloat rotationRadians = (targetBearing - mapHeading) * M_PI / 180.0;
++                cursorView.transform = CGAffineTransformMakeRotation(rotationRadians);
++            }
++        } completion:nil];
++    }
+ }
+ 
+ - (void)mapView:(AIRMap *)mapView regionWillChangeAnimated:(BOOL)animated
+@@ -932,6 +1265,8 @@ static int kDragCenterContext;
+ - (void)mapViewDidChangeVisibleRegion:(AIRMap *)mapView
+ {
+     [self _regionChanged:mapView continuous:YES];
++    [self _updateUserLocationArrowRotation:mapView];
++    [self _updateNavigationCursorRotation:mapView];
+ }
+ 
+ - (void)mapView:(AIRMap *)mapView regionDidChangeAnimated:(__unused BOOL)animated
+diff --git a/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h b/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h
+index e4fc048..91b6de5 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h
++++ b/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h
+@@ -1 +1 @@
+-#define HAVE_GOOGLE_MAPS 1
++#define HAVE_GOOGLE_MAPS 0
+diff --git a/node_modules/react-native-maps/ios/AirMaps/RNMapsMapView.mm b/node_modules/react-native-maps/ios/AirMaps/RNMapsMapView.mm
+index 447520d..aeae7c7 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/RNMapsMapView.mm
++++ b/node_modules/react-native-maps/ios/AirMaps/RNMapsMapView.mm
+@@ -594,6 +594,23 @@ newViewProps.name.right);           \
+     REMAP_MAPVIEW_COLOR_PROP(tintColor)
+ 
+     REMAP_MAPVIEW_STRING_PROP(userLocationAnnotationTitle)
++    REMAP_MAPVIEW_STRING_PROP(userLocationImage)
++    REMAP_MAPVIEW_COLOR_PROP(userLocationImageColor)
++    REMAP_MAPVIEW_PROP(userLocationImageSize)
++
++    if (oldViewProps.navigationRouteCoordinates != newViewProps.navigationRouteCoordinates) {
++        NSMutableArray *coords = nil;
++        if (!newViewProps.navigationRouteCoordinates.empty()) {
++            coords = [NSMutableArray arrayWithCapacity:newViewProps.navigationRouteCoordinates.size()];
++            for (const auto& coord : newViewProps.navigationRouteCoordinates) {
++                [coords addObject:@{
++                    @"latitude": @(coord.latitude),
++                    @"longitude": @(coord.longitude)
++                }];
++            }
++        }
++        _view.navigationRouteCoordinates = coords;
++    }
+ 
+     if (oldViewProps.mapType != newViewProps.mapType){
+         _view.mapType = mapRNTypeToMKMapType(newViewProps.mapType);
+diff --git a/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.cpp b/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.cpp
+index ba41078..207eb4a 100644
+--- a/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.cpp
++++ b/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.cpp
+@@ -401,6 +401,10 @@ RNMapsMapViewProps::RNMapsMapViewProps(
+     customMapStyleString(convertRawProp(context, rawProps, "customMapStyleString", sourceProps.customMapStyleString, {})),
+     userLocationAnnotationTitle(convertRawProp(context, rawProps, "userLocationAnnotationTitle", sourceProps.userLocationAnnotationTitle, {})),
+     userLocationCalloutEnabled(convertRawProp(context, rawProps, "userLocationCalloutEnabled", sourceProps.userLocationCalloutEnabled, {false})),
++    userLocationImage(convertRawProp(context, rawProps, "userLocationImage", sourceProps.userLocationImage, {})),
++    userLocationImageColor(convertRawProp(context, rawProps, "userLocationImageColor", sourceProps.userLocationImageColor, {})),
++    userLocationImageSize(convertRawProp(context, rawProps, "userLocationImageSize", sourceProps.userLocationImageSize, {0})),
++    navigationRouteCoordinates(convertRawProp(context, rawProps, "navigationRouteCoordinates", sourceProps.navigationRouteCoordinates, {})),
+     userLocationFastestInterval(convertRawProp(context, rawProps, "userLocationFastestInterval", sourceProps.userLocationFastestInterval, {5000})),
+     userLocationPriority(convertRawProp(context, rawProps, "userLocationPriority", sourceProps.userLocationPriority, {RNMapsMapViewUserLocationPriority::High})),
+     userLocationUpdateInterval(convertRawProp(context, rawProps, "userLocationUpdateInterval", sourceProps.userLocationUpdateInterval, {5000})),
+@@ -606,6 +610,26 @@ folly::dynamic RNMapsMapViewProps::getDiffProps(
+     result["userLocationCalloutEnabled"] = userLocationCalloutEnabled;
+   }
+     
++  if (userLocationImage != oldProps->userLocationImage) {
++    result["userLocationImage"] = userLocationImage;
++  }
++
++  if (userLocationImageColor != oldProps->userLocationImageColor) {
++    result["userLocationImageColor"] = toDynamic(userLocationImageColor);
++  }
++
++  if (userLocationImageSize != oldProps->userLocationImageSize) {
++    result["userLocationImageSize"] = userLocationImageSize;
++  }
++
++  if (navigationRouteCoordinates != oldProps->navigationRouteCoordinates) {
++    folly::dynamic arr = folly::dynamic::array();
++    for (const auto& coord : navigationRouteCoordinates) {
++      arr.push_back(toDynamic(coord));
++    }
++    result["navigationRouteCoordinates"] = arr;
++  }
++
+   if (userLocationFastestInterval != oldProps->userLocationFastestInterval) {
+     result["userLocationFastestInterval"] = userLocationFastestInterval;
+   }
+diff --git a/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.h b/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.h
+index 1249045..ce639c3 100644
+--- a/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.h
++++ b/node_modules/react-native-maps/ios/generated/RNMapsSpecs/Props.h
+@@ -73,6 +73,46 @@ static inline folly::dynamic toDynamic(const RNMapsCircleCenterStruct &value) {
+   return value.toDynamic();
+ }
+ #endif
++
++struct RNMapsNavigationCoordinateStruct {
++  double latitude{0.0};
++  double longitude{0.0};
++
++  bool operator==(const RNMapsNavigationCoordinateStruct&) const = default;
++
++#ifdef RN_SERIALIZABLE_STATE
++  folly::dynamic toDynamic() const {
++    folly::dynamic result = folly::dynamic::object();
++    result["latitude"] = latitude;
++    result["longitude"] = longitude;
++    return result;
++  }
++#endif
++};
++
++static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, RNMapsNavigationCoordinateStruct &result) {
++  auto map = (std::unordered_map<std::string, RawValue>)value;
++
++  auto tmp_latitude = map.find("latitude");
++  if (tmp_latitude != map.end()) {
++    fromRawValue(context, tmp_latitude->second, result.latitude);
++  }
++  auto tmp_longitude = map.find("longitude");
++  if (tmp_longitude != map.end()) {
++    fromRawValue(context, tmp_longitude->second, result.longitude);
++  }
++}
++
++static inline std::string toString(const RNMapsNavigationCoordinateStruct &value) {
++  return "[Object RNMapsNavigationCoordinateStruct]";
++}
++
++#ifdef RN_SERIALIZABLE_STATE
++static inline folly::dynamic toDynamic(const RNMapsNavigationCoordinateStruct &value) {
++  return value.toDynamic();
++}
++#endif
++
+ class RNMapsCircleProps final : public ViewProps {
+  public:
+   RNMapsCircleProps() = default;
+@@ -1420,6 +1460,10 @@ class RNMapsMapViewProps final : public ViewProps {
+   std::string customMapStyleString{};
+   std::string userLocationAnnotationTitle{};
+   bool userLocationCalloutEnabled{false};
++  std::string userLocationImage{};
++  SharedColor userLocationImageColor{};
++  Float userLocationImageSize{0};
++  std::vector<RNMapsNavigationCoordinateStruct> navigationRouteCoordinates{};
+   int userLocationFastestInterval{5000};
+   RNMapsMapViewUserLocationPriority userLocationPriority{RNMapsMapViewUserLocationPriority::High};
+   int userLocationUpdateInterval{5000};
+diff --git a/node_modules/react-native-maps/src/MapView.tsx b/node_modules/react-native-maps/src/MapView.tsx
+index 6fd5565..5fb7758 100644
+--- a/node_modules/react-native-maps/src/MapView.tsx
++++ b/node_modules/react-native-maps/src/MapView.tsx
+@@ -2,6 +2,7 @@ import * as React from 'react';
+ import {
+   Animated as RNAnimated,
+   Animated,
++  type ColorValue,
+   findNodeHandle,
+   Platform,
+   requireNativeComponent,
+@@ -696,6 +697,46 @@ export type MapViewProps = ViewProps & {
+    */
+   userLocationCalloutEnabled?: boolean;
+ 
++  /**
++   * An SF Symbol name to use as the user location indicator instead of the default blue dot.
++   * The symbol rotates to match the user's heading.
++   *
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  userLocationImage?: string;
++
++  /**
++   * The color of the user location image.
++   *
++   * @default System Blue
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  userLocationImageColor?: ColorValue;
++
++  /**
++   * The point size of the user location image.
++   *
++   * @default 22
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  userLocationImageSize?: number;
++
++  /**
++   * Route polyline coordinates for native navigation cursor snapping.
++   * When set, the user location annotation snaps to the nearest point on this polyline.
++   * When cleared, the default blue dot is restored.
++   *
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  navigationRouteCoordinates?: ReadonlyArray<{
++    latitude: number;
++    longitude: number;
++  }>;
++
+   /**
+    * Fastest interval the application will actively acquire locations.
+    *
+diff --git a/node_modules/react-native-maps/src/specs/NativeComponentMapView.ts b/node_modules/react-native-maps/src/specs/NativeComponentMapView.ts
+index b4fd5c1..e8a6c95 100644
+--- a/node_modules/react-native-maps/src/specs/NativeComponentMapView.ts
++++ b/node_modules/react-native-maps/src/specs/NativeComponentMapView.ts
+@@ -982,6 +982,45 @@ export interface MapFabricNativeProps extends ViewProps {
+    */
+   userLocationCalloutEnabled?: boolean;
+ 
++  /**
++   * An SF Symbol name to use as the user location indicator instead of the default blue dot.
++   * The symbol rotates to match the user's heading.
++   *
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  userLocationImage?: string;
++
++  /**
++   * The color of the user location image.
++   *
++   * @default System Blue
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  userLocationImageColor?: ColorValue;
++
++  /**
++   * The point size of the user location image.
++   *
++   * @default 22
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  userLocationImageSize?: Float;
++
++  /**
++   * Route polyline coordinates for native navigation cursor snapping.
++   * When set, the user location annotation snaps to the nearest point on this polyline.
++   * When cleared, the default blue dot is restored.
++   *
++   * @platform iOS: Apple Maps only
++   * @platform Android: Not supported
++   */
++  navigationRouteCoordinates?: ReadonlyArray<
++    Readonly<{ latitude: Double; longitude: Double }>
++  >;
++
+   /**
+    * Fastest interval the application will actively acquire locations.
+    *
