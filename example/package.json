@@ -4,10 +4,13 @@
   "private": true,
   "main": "index.ts",
   "scripts": {
+    "format": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\"",
     "postinstall": "patch-package",
     "ios": "expo run:ios",
+    "lint": "expo lint . --fix -- --max-warnings=0",
     "prebuild": "expo prebuild --clean --platform ios",
-    "start": "expo start"
+    "start": "expo start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "expo": "^55.0.9",
@@ -19,7 +22,13 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "^55.0.0",
+    "globals": "^17.4.0",
     "patch-package": "^8.0.1",
+    "prettier": "3.5.3",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "prettier-plugin-packagejson": "^3.0.2",
     "typescript": "~5.9.2"
   },
   "expo": {

@@ -21,13 +21,16 @@
     "build": "expo-module build",
     "build:plugin": "expo-module build plugin",
     "clean": "expo-module clean",
+    "dev": "cd example && npm run prebuild && npm run ios",
     "expo-module": "expo-module",
-    "fix": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\" && expo-module lint . --fix && tsc --noEmit",
-    "lint": "expo-module lint",
+    "fix": "npm run format && npm run lint && npm run typecheck",
+    "format": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\" && npm run --prefix example format && swiftformat ios/ --swift-version 6",
+    "lint": "expo-module lint src/ --fix && npm run --prefix example lint",
     "open:ios": "xed example/ios",
     "prepare": "expo-module prepare && expo-module build plugin",
     "prepublishOnly": "expo-module prepublishOnly",
-    "test": "expo-module test"
+    "test": "expo-module test",
+    "typecheck": "tsc --noEmit && npm run --prefix example typecheck"
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
