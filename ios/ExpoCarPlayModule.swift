@@ -38,10 +38,26 @@ public class ExpoCarPlayModule: Module {
           userInfo: [NSLocalizedDescriptionKey: "CarPlay not connected"]
         )
       }
-      // Clear old hierarchy, re-add the new root
       TemplateStore.shared.clear()
       let _ = TemplateStore.shared.store(template)
       interfaceController.setRootTemplate(template, animated: true, completion: nil)
+    }
+
+    AsyncFunction("updateCarPlayLocation") { (location: [String: Double]) in
+      MapTemplateHandler.shared.updateLocation(
+        latitude: location["latitude"] ?? 0,
+        longitude: location["longitude"] ?? 0,
+        course: location["course"] ?? -1,
+        speed: location["speed"] ?? 0
+      )
+    }
+
+    AsyncFunction("setCarPlayRoute") { (coordinates: [[String: Double]]) in
+      MapTemplateHandler.shared.setRoute(coordinates: coordinates)
+    }
+
+    AsyncFunction("clearCarPlayRoute") { () in
+      MapTemplateHandler.shared.clearRoute()
     }
   }
 }
