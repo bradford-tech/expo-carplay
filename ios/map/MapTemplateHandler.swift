@@ -25,6 +25,15 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         return TemplateStore.shared.store(template)
     }
 
+    // MARK: - CPMapTemplateDelegate
+
+    /// Required by iOS 26.4+ — CarPlayTemplateUIHost calls this during
+    /// _updateShareButtonVisibility without checking respondsToSelector:.
+    /// Returning false prevents the share button from being configured.
+    func mapTemplateShouldProvideRouteSharing(_: CPMapTemplate) -> Bool {
+        false
+    }
+
     // MARK: - Map VC Access
 
     private var mapViewController: CarPlayMapViewController? {

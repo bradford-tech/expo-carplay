@@ -17,6 +17,27 @@ type ExpoCarPlayModule = {
     coordinates: { latitude: number; longitude: number }[]
   ): Promise<void>;
   clearCarPlayRoute(): Promise<void>;
+  startNavigation(tripConfig: {
+    origin: { latitude: number; longitude: number };
+    destination: { latitude: number; longitude: number };
+    routeChoices: {
+      summaryVariants: string[];
+      additionalInformationVariants?: string[];
+    }[];
+  }): Promise<string>;
+  stopNavigation(): Promise<void>;
+  updateManeuvers(
+    maneuvers: {
+      instructionVariants: string[];
+      symbolImage?: { systemName: string } | { uri: string };
+      distanceRemaining?: number;
+      timeRemaining?: number;
+    }[]
+  ): Promise<void>;
+  updateTravelEstimates(
+    estimates: { distanceRemaining: number; timeRemaining: number },
+    maneuverIndex?: number
+  ): Promise<void>;
 };
 
 export default requireNativeModule<ExpoCarPlayModule>('ExpoCarPlay');

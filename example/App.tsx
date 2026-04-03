@@ -5,14 +5,18 @@ import {
   setCarPlayRoute,
   setRootTemplate,
   startFollowingUser,
+  startNavigation,
   stopFollowingUser,
+  stopNavigation,
+  updateManeuvers,
+  updateTravelEstimates,
   useCarPlay,
 } from 'expo-carplay';
 import { useEffect } from 'react';
 import { Button, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-// Sample route: a short segment near Apple Park, Cupertino
+// Sample route near Apple Park, Cupertino
 const SAMPLE_ROUTE = [
   { latitude: 37.335, longitude: -122.009 },
   { latitude: 37.336, longitude: -122.008 },
@@ -21,6 +25,27 @@ const SAMPLE_ROUTE = [
   { latitude: 37.341, longitude: -122.004 },
   { latitude: 37.343, longitude: -122.003 },
   { latitude: 37.345, longitude: -122.002 },
+];
+
+const SAMPLE_MANEUVERS = [
+  {
+    instructionVariants: ['Head northeast on Infinite Loop'],
+    symbolImage: { systemName: 'arrow.up' },
+    distanceRemaining: 800,
+    timeRemaining: 120,
+  },
+  {
+    instructionVariants: ['Turn right onto N De Anza Blvd'],
+    symbolImage: { systemName: 'arrow.turn.up.right' },
+    distanceRemaining: 400,
+    timeRemaining: 60,
+  },
+  {
+    instructionVariants: ['Arrive at destination'],
+    symbolImage: { systemName: 'mappin.circle.fill' },
+    distanceRemaining: 0,
+    timeRemaining: 0,
+  },
 ];
 
 export default function App() {
@@ -35,14 +60,41 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  const startNavigation = async () => {
+  const handleStartNavigation = async () => {
     if (!connected) return;
+
+    // 1. Set the route polyline on the map
     await setCarPlayRoute(SAMPLE_ROUTE);
+
+    // 2. Start native location tracking
     await startFollowingUser();
-    console.log('CarPlay: navigation started (native location tracking)');
+
+    // 3. Start the CarPlay navigation session
+    const sessionId = await startNavigation({
+      origin: SAMPLE_ROUTE[0],
+      destination: SAMPLE_ROUTE[SAMPLE_ROUTE.length - 1],
+      routeChoices: [
+        {
+          summaryVariants: ['Via Infinite Loop', 'Fastest route'],
+          additionalInformationVariants: ['0.5 mi — 2 min'],
+        },
+      ],
+    });
+    console.log('CarPlay: navigation started, session:', sessionId);
+
+    // 4. Set the turn-by-turn maneuvers
+    await updateManeuvers(SAMPLE_MANEUVERS);
+    console.log('CarPlay: maneuvers set');
+
+    // 5. Set initial travel estimates
+    await updateTravelEstimates(
+      { distanceRemaining: 800, timeRemaining: 120 },
+      0
+    );
   };
 
-  const stopNavigation = async () => {
+  const handleStopNavigation = async () => {
+    await stopNavigation();
     await stopFollowingUser();
     await clearCarPlayRoute();
     console.log('CarPlay: navigation stopped');
@@ -58,8 +110,11 @@ export default function App() {
           </Text>
           {connected && (
             <View style={styles.buttons}>
-              <Button title="Start Navigation" onPress={startNavigation} />
-              <Button title="Stop Navigation" onPress={stopNavigation} />
+              <Button
+                title="Start Navigation"
+                onPress={handleStartNavigation}
+              />
+              <Button title="Stop Navigation" onPress={handleStopNavigation} />
             </View>
           )}
         </View>
