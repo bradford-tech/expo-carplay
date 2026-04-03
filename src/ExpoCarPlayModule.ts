@@ -11,6 +11,16 @@ type ExpoCarPlayModule = {
   ): EventSubscription;
   createMapTemplate(): Promise<string>;
   setRootTemplate(templateId: string): Promise<void>;
+  updateCarPlayLocation(location: {
+    latitude: number;
+    longitude: number;
+    course: number;
+    speed: number;
+  }): Promise<void>;
+  setCarPlayRoute(
+    coordinates: { latitude: number; longitude: number }[]
+  ): Promise<void>;
+  clearCarPlayRoute(): Promise<void>;
 };
 
 export default requireNativeModule<ExpoCarPlayModule>('ExpoCarPlay');
