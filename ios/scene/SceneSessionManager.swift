@@ -6,23 +6,23 @@
 import CarPlay
 
 final class SceneSessionManager {
-  static let shared = SceneSessionManager()
+    static let shared = SceneSessionManager()
 
-  private(set) var interfaceController: CPInterfaceController?
-  private(set) var carWindow: CPWindow?
-  private(set) var isConnected: Bool = false
+    private(set) var interfaceController: CPInterfaceController?
+    private(set) var carWindow: CPWindow?
+    private(set) var isConnected: Bool = false
 
-  private init() {}
+    private init() {}
 
-  func connect(interfaceController: CPInterfaceController, window: CPWindow) {
-    self.interfaceController = interfaceController
-    self.carWindow = window
-    self.isConnected = true
-  }
+    func connect(interfaceController: CPInterfaceController, window: CPWindow) {
+        self.interfaceController = interfaceController
+        carWindow = window
+        isConnected = true
+    }
 
-  func disconnect() {
-    self.interfaceController = nil
-    self.carWindow = nil
-    self.isConnected = false
-  }
+    func disconnect() {
+        interfaceController = nil
+        carWindow = nil
+        isConnected = false
+    }
 }

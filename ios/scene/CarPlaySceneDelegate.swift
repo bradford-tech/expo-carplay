@@ -8,24 +8,24 @@ import CarPlay
 
 @objc(CarPlaySceneDelegate)
 class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
-  // Navigation app variant — receives both interface controller and window
-  func templateApplicationScene(
-    _ templateApplicationScene: CPTemplateApplicationScene,
-    didConnect interfaceController: CPInterfaceController,
-    to window: CPWindow
-  ) {
-    SceneSessionManager.shared.connect(interfaceController: interfaceController, window: window)
-    window.rootViewController = CarPlayMapViewController()
-    CarPlayEventEmitter.shared.emit("onConnect")
-  }
+    /// Navigation app variant — receives both interface controller and window
+    func templateApplicationScene(
+        _: CPTemplateApplicationScene,
+        didConnect interfaceController: CPInterfaceController,
+        to window: CPWindow
+    ) {
+        SceneSessionManager.shared.connect(interfaceController: interfaceController, window: window)
+        window.rootViewController = CarPlayMapViewController()
+        CarPlayEventEmitter.shared.emit("onConnect")
+    }
 
-  func templateApplicationScene(
-    _ templateApplicationScene: CPTemplateApplicationScene,
-    didDisconnect interfaceController: CPInterfaceController,
-    from window: CPWindow
-  ) {
-    TemplateStore.shared.clear()
-    SceneSessionManager.shared.disconnect()
-    CarPlayEventEmitter.shared.emit("onDisconnect")
-  }
+    func templateApplicationScene(
+        _: CPTemplateApplicationScene,
+        didDisconnect _: CPInterfaceController,
+        from _: CPWindow
+    ) {
+        TemplateStore.shared.clear()
+        SceneSessionManager.shared.disconnect()
+        CarPlayEventEmitter.shared.emit("onDisconnect")
+    }
 }

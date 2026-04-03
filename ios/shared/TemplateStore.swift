@@ -6,27 +6,27 @@ import CarPlay
 import Foundation
 
 final class TemplateStore {
-  static let shared = TemplateStore()
+    static let shared = TemplateStore()
 
-  private var templates: [String: CPTemplate] = [:]
+    private var templates: [String: CPTemplate] = [:]
 
-  private init() {}
+    private init() {}
 
-  func store(_ template: CPTemplate) -> String {
-    let id = UUID().uuidString
-    templates[id] = template
-    return id
-  }
+    func store(_ template: CPTemplate) -> String {
+        let id = UUID().uuidString
+        templates[id] = template
+        return id
+    }
 
-  func get(_ id: String) -> CPTemplate? {
-    return templates[id]
-  }
+    func get(_ id: String) -> CPTemplate? {
+        templates[id]
+    }
 
-  func remove(_ id: String) {
-    templates.removeValue(forKey: id)
-  }
+    func remove(_ id: String) {
+        templates.removeValue(forKey: id)
+    }
 
-  func clear() {
-    templates.removeAll()
-  }
+    func clear() {
+        templates.removeAll()
+    }
 }

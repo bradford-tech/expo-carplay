@@ -5,17 +5,17 @@
 import ExpoModulesCore
 
 final class CarPlayEventEmitter {
-  static let shared = CarPlayEventEmitter()
+    static let shared = CarPlayEventEmitter()
 
-  private weak var module: Module?
+    private weak var module: Module?
 
-  private init() {}
+    private init() {}
 
-  func setModule(_ module: Module) {
-    self.module = module
-  }
+    func setModule(_ module: Module) {
+        self.module = module
+    }
 
-  func emit(_ eventName: String, _ body: [String: Any] = [:]) {
-    module?.sendEvent(eventName, body)
-  }
+    func emit(_ eventName: String, _ body: [String: Any] = [:]) {
+        module?.sendEvent(eventName, body)
+    }
 }
