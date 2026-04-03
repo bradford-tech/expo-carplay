@@ -4,7 +4,8 @@ import {
   createMapTemplate,
   setCarPlayRoute,
   setRootTemplate,
-  updateCarPlayLocation,
+  startFollowingUser,
+  stopFollowingUser,
   useCarPlay,
 } from 'expo-carplay';
 import { useEffect } from 'react';
@@ -34,40 +35,17 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  const simulateNavigation = async () => {
+  const startNavigation = async () => {
     if (!connected) return;
-
-    // Set the route polyline
     await setCarPlayRoute(SAMPLE_ROUTE);
-    console.log('CarPlay: route set');
-
-    // Simulate driving along the route
-    for (let i = 0; i < SAMPLE_ROUTE.length; i++) {
-      const point = SAMPLE_ROUTE[i];
-      const next = SAMPLE_ROUTE[Math.min(i + 1, SAMPLE_ROUTE.length - 1)];
-
-      // Approximate course from current to next point
-      const dLon = next.longitude - point.longitude;
-      const dLat = next.latitude - point.latitude;
-      const course = (Math.atan2(dLon, dLat) * 180) / Math.PI;
-
-      await updateCarPlayLocation({
-        latitude: point.latitude,
-        longitude: point.longitude,
-        course: course >= 0 ? course : course + 360,
-        speed: 13.4, // ~30 mph
-      });
-
-      // Wait 2 seconds between updates
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-
-    console.log('CarPlay: simulation complete');
+    await startFollowingUser();
+    console.log('CarPlay: navigation started (native location tracking)');
   };
 
-  const clearRoute = async () => {
+  const stopNavigation = async () => {
+    await stopFollowingUser();
     await clearCarPlayRoute();
-    console.log('CarPlay: route cleared');
+    console.log('CarPlay: navigation stopped');
   };
 
   return (
@@ -80,11 +58,8 @@ export default function App() {
           </Text>
           {connected && (
             <View style={styles.buttons}>
-              <Button
-                title="Simulate Navigation"
-                onPress={simulateNavigation}
-              />
-              <Button title="Clear Route" onPress={clearRoute} />
+              <Button title="Start Navigation" onPress={startNavigation} />
+              <Button title="Stop Navigation" onPress={stopNavigation} />
             </View>
           )}
         </View>

@@ -6,40 +6,44 @@
 import CarPlay
 
 final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
-  static let shared = MapTemplateHandler()
+    static let shared = MapTemplateHandler()
 
-  private override init() {
-    super.init()
-  }
+    override private init() {
+        super.init()
+    }
 
-  func create() -> String {
-    let template = CPMapTemplate()
-    template.mapDelegate = self
-    template.automaticallyHidesNavigationBar = false
+    func create() -> String {
+        let template = CPMapTemplate()
+        template.mapDelegate = self
+        template.automaticallyHidesNavigationBar = false
 
-    // Temporary: add a visible map button to confirm the template is rendering
-    let zoomInButton = CPMapButton { _ in }
-    zoomInButton.image = UIImage(systemName: "plus.magnifyingglass")
-    template.mapButtons = [zoomInButton]
+        // Temporary: add a visible map button to confirm the template is rendering
+        let zoomInButton = CPMapButton { _ in }
+        zoomInButton.image = UIImage(systemName: "plus.magnifyingglass")
+        template.mapButtons = [zoomInButton]
 
-    return TemplateStore.shared.store(template)
-  }
+        return TemplateStore.shared.store(template)
+    }
 
-  // MARK: - Map VC Access
+    // MARK: - Map VC Access
 
-  private var mapViewController: CarPlayMapViewController? {
-    SceneSessionManager.shared.carWindow?.rootViewController as? CarPlayMapViewController
-  }
+    private var mapViewController: CarPlayMapViewController? {
+        SceneSessionManager.shared.carWindow?.rootViewController as? CarPlayMapViewController
+    }
 
-  func updateLocation(latitude: Double, longitude: Double, course: Double, speed: Double) {
-    mapViewController?.updateLocation(latitude: latitude, longitude: longitude, course: course, speed: speed)
-  }
+    func startFollowingUser() {
+        mapViewController?.startFollowingUser()
+    }
 
-  func setRoute(coordinates: [[String: Double]]) {
-    mapViewController?.setRoute(coordinates: coordinates)
-  }
+    func stopFollowingUser() {
+        mapViewController?.stopFollowingUser()
+    }
 
-  func clearRoute() {
-    mapViewController?.clearRoute()
-  }
+    func setRoute(coordinates: [[String: Double]]) {
+        mapViewController?.setRoute(coordinates: coordinates)
+    }
+
+    func clearRoute() {
+        mapViewController?.clearRoute()
+    }
 }

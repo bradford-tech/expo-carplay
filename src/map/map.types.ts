@@ -6,10 +6,3 @@ export type Coordinate = {
   latitude: number;
   longitude: number;
 };
-
-export type LocationUpdate = {
-  latitude: number;
-  longitude: number;
-  course: number;
-  speed: number;
-};

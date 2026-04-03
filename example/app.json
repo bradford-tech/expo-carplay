@@ -14,7 +14,10 @@
     "plugins": ["expo-carplay"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "expo.modules.carplay.example"
+      "bundleIdentifier": "expo.modules.carplay.example",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs your location for CarPlay navigation."
+      }
     }
   }
 }

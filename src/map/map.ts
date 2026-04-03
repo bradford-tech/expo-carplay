@@ -3,16 +3,18 @@
 // See: docs/carplay-api-surface.md §2 — Map Template & Map Buttons
 
 import ExpoCarPlay from '../ExpoCarPlayModule';
-import type { Coordinate, LocationUpdate } from './map.types';
+import type { Coordinate } from './map.types';
 
 export async function createMapTemplate(): Promise<string> {
   return ExpoCarPlay.createMapTemplate();
 }
 
-export async function updateCarPlayLocation(
-  location: LocationUpdate
-): Promise<void> {
-  await ExpoCarPlay.updateCarPlayLocation(location);
+export async function startFollowingUser(): Promise<void> {
+  await ExpoCarPlay.startFollowingUser();
+}
+
+export async function stopFollowingUser(): Promise<void> {
+  await ExpoCarPlay.stopFollowingUser();
 }
 
 export async function setCarPlayRoute(

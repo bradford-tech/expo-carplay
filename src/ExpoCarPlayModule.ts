@@ -11,12 +11,8 @@ type ExpoCarPlayModule = {
   ): EventSubscription;
   createMapTemplate(): Promise<string>;
   setRootTemplate(templateId: string): Promise<void>;
-  updateCarPlayLocation(location: {
-    latitude: number;
-    longitude: number;
-    course: number;
-    speed: number;
-  }): Promise<void>;
+  startFollowingUser(): Promise<void>;
+  stopFollowingUser(): Promise<void>;
   setCarPlayRoute(
     coordinates: { latitude: number; longitude: number }[]
   ): Promise<void>;
