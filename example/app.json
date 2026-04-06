@@ -11,7 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "plugins": ["expo-carplay"],
+    "plugins": ["@bradford-tech/expo-carplay"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "expo.modules.carplay.example",

@@ -48,8 +48,8 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         mapViewController?.stopFollowingUser()
     }
 
-    func setRoute(coordinates: [[String: Double]]) {
-        mapViewController?.setRoute(coordinates: coordinates)
+    func setRoute(segments: [[String: Any]]) {
+        mapViewController?.setRoute(segments: segments)
     }
 
     func clearRoute() {

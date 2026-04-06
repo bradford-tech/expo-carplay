@@ -6,7 +6,7 @@ module.exports = async (env, argv) => {
     {
       ...env,
       babel: {
-        dangerouslyAddModulePathsToTranspile: ['expo-carplay'],
+        dangerouslyAddModulePathsToTranspile: ['@bradford-tech/expo-carplay'],
       },
     },
     argv

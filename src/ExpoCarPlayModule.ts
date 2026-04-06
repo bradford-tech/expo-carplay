@@ -14,7 +14,10 @@ type ExpoCarPlayModule = {
   startFollowingUser(): Promise<void>;
   stopFollowingUser(): Promise<void>;
   setCarPlayRoute(
-    coordinates: { latitude: number; longitude: number }[]
+    segments: {
+      coordinates: { latitude: number; longitude: number }[];
+      color: string;
+    }[]
   ): Promise<void>;
   clearCarPlayRoute(): Promise<void>;
   startNavigation(tripConfig: {

@@ -19,7 +19,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.extraNodeModules = {
-  'expo-carplay': '..',
+  '@bradford-tech/expo-carplay': '..',
 };
 
 config.watchFolders = [path.resolve(__dirname, '..')];

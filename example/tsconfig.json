@@ -3,8 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "expo-carplay": ["../src/index"],
-      "expo-carplay/*": ["../src/*"]
+      "@bradford-tech/expo-carplay": ["../src/index"],
+      "@bradford-tech/expo-carplay/*": ["../src/*"]
     }
   }
 }

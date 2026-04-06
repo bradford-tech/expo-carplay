@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "expo": "^55.0.9",
-    "expo-carplay": "file:..",
+    "@bradford-tech/expo-carplay": "file:..",
     "react": "19.2.0",
     "react-native": "0.83.4",
     "react-native-maps": "^1.27.2",

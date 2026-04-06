@@ -11,20 +11,37 @@ import {
   updateManeuvers,
   updateTravelEstimates,
   useCarPlay,
-} from 'expo-carplay';
+} from '@bradford-tech/expo-carplay';
 import { useEffect } from 'react';
 import { Button, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-// Sample route near Apple Park, Cupertino
+// Sample route with colored segments near Apple Park
 const SAMPLE_ROUTE = [
-  { latitude: 37.335, longitude: -122.009 },
-  { latitude: 37.336, longitude: -122.008 },
-  { latitude: 37.337, longitude: -122.006 },
-  { latitude: 37.339, longitude: -122.005 },
-  { latitude: 37.341, longitude: -122.004 },
-  { latitude: 37.343, longitude: -122.003 },
-  { latitude: 37.345, longitude: -122.002 },
+  {
+    coordinates: [
+      { latitude: 37.335, longitude: -122.009 },
+      { latitude: 37.336, longitude: -122.008 },
+      { latitude: 37.337, longitude: -122.006 },
+      { latitude: 37.339, longitude: -122.005 },
+    ],
+    color: 'systemTeal', // LSV-legal segment
+  },
+  {
+    coordinates: [
+      { latitude: 37.339, longitude: -122.005 },
+      { latitude: 37.341, longitude: -122.004 },
+      { latitude: 37.343, longitude: -122.003 },
+    ],
+    color: 'systemRed', // Non-LSV-legal segment
+  },
+  {
+    coordinates: [
+      { latitude: 37.343, longitude: -122.003 },
+      { latitude: 37.345, longitude: -122.002 },
+    ],
+    color: 'systemTeal', // LSV-legal again
+  },
 ];
 
 const SAMPLE_MANEUVERS = [
@@ -71,8 +88,11 @@ export default function App() {
 
     // 3. Start the CarPlay navigation session
     const sessionId = await startNavigation({
-      origin: SAMPLE_ROUTE[0],
-      destination: SAMPLE_ROUTE[SAMPLE_ROUTE.length - 1],
+      origin: SAMPLE_ROUTE[0].coordinates[0],
+      destination:
+        SAMPLE_ROUTE[SAMPLE_ROUTE.length - 1].coordinates[
+          SAMPLE_ROUTE[SAMPLE_ROUTE.length - 1].coordinates.length - 1
+        ],
       routeChoices: [
         {
           summaryVariants: ['Via Infinite Loop', 'Fastest route'],

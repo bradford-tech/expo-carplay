@@ -87,7 +87,8 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     private var lastMatchedIndex: Int = 0
     private var lastMatchedGPS: CLLocationCoordinate2D = kCLLocationCoordinate2DInvalid
     private var lastKnownBearing: CLLocationDirection = 0
-    private var routeOverlay: MKPolyline?
+    private var routeOverlays: [MKPolyline] = []
+    private var overlayColors: [MKPolyline: UIColor] = [:]
 
     /// Camera state
     private var isFollowing: Bool = false
@@ -128,9 +129,9 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         locationManager.stopUpdatingLocation()
     }
 
-    func setRoute(coordinates: [[String: Double]]) {
+    func setRoute(segments: [[String: Any]]) {
         DispatchQueue.main.async { [self] in
-            _setRouteOnMain(coordinates: coordinates)
+            _setRouteOnMain(segments: segments)
         }
     }
 
@@ -223,18 +224,41 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     // MARK: - Route Management
 
-    private func _setRouteOnMain(coordinates: [[String: Double]]) {
+    private func _setRouteOnMain(segments: [[String: Any]]) {
         _clearRouteOnMain()
 
-        guard coordinates.count >= 2 else { return }
+        // Collect all coordinates across all segments for route projection math
+        var allCoordinates: [CLLocationCoordinate2D] = []
 
-        // Parse into MKMapPoint array
-        routePointCount = coordinates.count
+        for segmentDict in segments {
+            guard let coordArray = segmentDict["coordinates"] as? [[String: Any]],
+                  coordArray.count >= 2
+            else { continue }
+
+            let colorString = segmentDict["color"] as? String ?? ""
+            let color = ColorConverter.color(from: colorString)
+
+            var segCoordinates = coordArray.map { coord -> CLLocationCoordinate2D in
+                let lat = (coord["latitude"] as? Double) ?? (coord["latitude"] as? NSNumber)?.doubleValue ?? 0
+                let lon = (coord["longitude"] as? Double) ?? (coord["longitude"] as? NSNumber)?.doubleValue ?? 0
+                return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            }
+
+            let polyline = MKPolyline(coordinates: &segCoordinates, count: segCoordinates.count)
+            routeOverlays.append(polyline)
+            overlayColors[polyline] = color
+            mapView.addOverlay(polyline)
+
+            allCoordinates.append(contentsOf: segCoordinates)
+        }
+
+        guard allCoordinates.count >= 2 else { return }
+
+        // Build flat MKMapPoint array for camera heading projection
+        routePointCount = allCoordinates.count
         routeMapPoints = .allocate(capacity: routePointCount)
-        for (i, coord) in coordinates.enumerated() {
-            let lat = coord["latitude"] ?? 0
-            let lon = coord["longitude"] ?? 0
-            routeMapPoints![i] = MKMapPoint(CLLocationCoordinate2D(latitude: lat, longitude: lon))
+        for (i, coord) in allCoordinates.enumerated() {
+            routeMapPoints![i] = MKMapPoint(coord)
         }
 
         // Activate route-derived heading
@@ -249,23 +273,19 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             lastKnownBearing = bearing(from: start, to: end)
         }
 
-        // Add polyline overlay
-        var mapCoordinates = coordinates.map { coord -> CLLocationCoordinate2D in
-            CLLocationCoordinate2D(
-                latitude: coord["latitude"] ?? 0,
-                longitude: coord["longitude"] ?? 0
-            )
+        // Zoom to show the full route (camera follow will override once location updates arrive)
+        if !routeOverlays.isEmpty {
+            let rect = routeOverlays.reduce(MKMapRect.null) { $0.union($1.boundingMapRect) }
+            mapView.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 60, left: 60, bottom: 60, right: 60), animated: true)
         }
-        let polyline = MKPolyline(coordinates: &mapCoordinates, count: mapCoordinates.count)
-        routeOverlay = polyline
-        mapView.addOverlay(polyline)
     }
 
     private func _clearRouteOnMain() {
-        if let overlay = routeOverlay {
+        for overlay in routeOverlays {
             mapView.removeOverlay(overlay)
-            routeOverlay = nil
         }
+        routeOverlays.removeAll()
+        overlayColors.removeAll()
         if let pts = routeMapPoints {
             pts.deallocate()
             routeMapPoints = nil
@@ -282,7 +302,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     func mapView(_: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? MKPolyline {
             let renderer = MKPolylineRenderer(polyline: polyline)
-            renderer.strokeColor = .systemBlue
+            renderer.strokeColor = overlayColors[polyline] ?? .systemBlue
             renderer.lineWidth = 5
             return renderer
         }

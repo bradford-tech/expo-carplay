@@ -1,5 +1,5 @@
 {
-  "name": "expo-carplay",
+  "name": "@bradford-tech/expo-carplay",
   "version": "0.1.0",
   "description": "A React Native Expo module for integrating Apple CarPlay navigation templates",
   "keywords": [
@@ -12,7 +12,10 @@
   "bugs": {
     "url": "https://github.com/bradford-tech/expo-carplay/issues"
   },
-  "repository": "https://github.com/bradford-tech/expo-carplay",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bradford-tech/expo-carplay.git"
+  },
   "license": "MIT",
   "author": "sbs44 <83440025+sbs44@users.noreply.github.com> (https://github.com/sbs44)",
   "main": "build/index.js",
@@ -34,7 +37,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
-    "expo": "^55.0.8",
+    "expo": "^55.0.11",
     "expo-module-scripts": "^55.0.2",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "^4.3.0",
