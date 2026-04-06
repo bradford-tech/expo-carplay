@@ -1,7 +1,7 @@
 # CarPlay Framework — Complete API Surface
 
-> Auto-generated from Apple Developer Documentation (CarPlay framework, iOS 12.0 – iOS 26.4).
-> Each section describes a feature area. Tables list every bindable member.
+> Reference from Apple Developer Documentation (CarPlay framework, iOS 12.0 – iOS 26.4).
+> Each section describes a feature area. Tables list every bindable member with implementation status.
 
 **Column key**
 
@@ -9,7 +9,47 @@
 |--------|--------|
 | **Kind** | `JS→Native` = call from JS · `Native→JS` = event/callback to JS · `Config` = property or data object · `Enum` = enumeration/option-set value |
 | **Nav?** | `Yes` = needed for navigation apps · `No` = not relevant · `Opt` = optional/useful but not required |
-| **Status** | Blank initially — fill in during implementation (`v1`, `v2`, `skip`, `—`) |
+| **Status** | `v1` = implemented and working · `stub` = handler scaffolded, not yet wired · blank = not started |
+
+---
+
+## Implementation Status Summary
+
+> Last updated: 2026-04-06
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| **Expo Config Plugin** | v1 | Info.plist scene manifest, CarPlay entitlements, phone scene delegate bridge |
+| **Scene Lifecycle** | v1 | Connect/disconnect events, interface controller & window references |
+| **Interface Controller** | Partial | `setRootTemplate` only; push/pop/present/dismiss not yet exposed |
+| **Map Template** | v1 | Creation, map delegate, MKMapView with location tracking, route polylines |
+| **Navigation Session** | v1 | Start/stop, maneuver updates, travel estimate updates, pause/finish trip |
+| **Maneuvers** | Partial | `instructionVariants`, `symbolImage` (SF Symbols), `initialTravelEstimates` |
+| **Trip & Route Choice** | v1 | Origin/destination, route choice summary variants |
+| **Travel Estimates** | v1 | Distance remaining, time remaining |
+| **List Template** | Stub | Handler file exists, not wired to JS |
+| **Grid Template** | Stub | Handler file exists, not wired to JS |
+| **Search Template** | Stub | Handler file exists, not wired to JS |
+| **Tab Bar Template** | Stub | Handler file exists, not wired to JS |
+| **Information Template** | Stub | Handler file exists, not wired to JS |
+| **Voice Control Template** | Stub | Handler file exists, not wired to JS |
+| **Alerts & Action Sheets** | Stub | Handler file exists, not wired to JS |
+| **Session Configuration** | Stub | Handler file exists, not wired to JS |
+| **Contact Template** | — | Not started |
+| **Point of Interest** | — | Not started |
+| **Now Playing** | — | Not started |
+| **Dashboard & Instrument Cluster** | — | Not started |
+| **Multitouch (iOS 26+)** | — | Not started |
+| **Android Auto** | — | No Android implementation |
+
+**JS Hooks:**
+
+| Hook | Status |
+|------|--------|
+| `useCarPlay()` | v1 — returns `{ connected: boolean }` |
+| `useMapTemplate()` | Stub |
+| `useNavigationSession()` | Stub |
+| `useSearchTemplate()` | Stub |
 
 ---
 
@@ -21,9 +61,9 @@ Manages the CarPlay connection lifecycle. When CarPlay connects, you receive a `
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `delegate` | CPTemplateApplicationScene | Config | Yes | |
-| `interfaceController` | CPTemplateApplicationScene | Config | Yes | |
-| `carWindow` | CPTemplateApplicationScene | Config | Yes | |
+| `delegate` | CPTemplateApplicationScene | Config | Yes | v1 |
+| `interfaceController` | CPTemplateApplicationScene | Config | Yes | v1 |
+| `carWindow` | CPTemplateApplicationScene | Config | Yes | v1 |
 | `contentStyle` | CPTemplateApplicationScene | Config | Yes | |
 
 ### CPTemplateApplicationSceneDelegate
@@ -31,9 +71,9 @@ Manages the CarPlay connection lifecycle. When CarPlay connects, you receive a `
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
 | `templateApplicationScene(_:didConnect:)` | CPTemplateApplicationSceneDelegate | Native→JS | No | |
-| `templateApplicationScene(_:didConnect:to:)` | CPTemplateApplicationSceneDelegate | Native→JS | Yes | |
+| `templateApplicationScene(_:didConnect:to:)` | CPTemplateApplicationSceneDelegate | Native→JS | Yes | v1 |
 | `templateApplicationScene(_:didDisconnectInterfaceController:)` | CPTemplateApplicationSceneDelegate | Native→JS | No | |
-| `templateApplicationScene(_:didDisconnect:from:)` | CPTemplateApplicationSceneDelegate | Native→JS | Yes | |
+| `templateApplicationScene(_:didDisconnect:from:)` | CPTemplateApplicationSceneDelegate | Native→JS | Yes | v1 |
 | `templateApplicationScene(_:didSelect:)` (maneuver) | CPTemplateApplicationSceneDelegate | Native→JS | Yes | |
 | `templateApplicationScene(_:didSelect:)` (nav alert) | CPTemplateApplicationSceneDelegate | Native→JS | Yes | |
 | `contentStyleDidChange(_:)` | CPTemplateApplicationSceneDelegate | Native→JS | Yes | |
@@ -49,7 +89,7 @@ Manages the CarPlay connection lifecycle. When CarPlay connects, you receive a `
 | `topTemplate` | CPInterfaceController | Config | Yes | |
 | `templates` | CPInterfaceController | Config | Yes | |
 | `presentedTemplate` | CPInterfaceController | Config | Opt | |
-| `setRootTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
+| `setRootTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | v1 |
 | `pushTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
 | `popTemplate(animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
 | `popToRootTemplate(animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
@@ -111,7 +151,7 @@ The map template is a control overlay for navigation apps' base map view. It pro
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `mapDelegate` | CPMapTemplate | Config | Yes | |
+| `mapDelegate` | CPMapTemplate | Config | Yes | v1 |
 | `mapButtons` | CPMapTemplate | Config | Yes | |
 | `automaticallyHidesNavigationBar` | CPMapTemplate | Config | Yes | |
 | `hidesButtonsWithNavigationBar` | CPMapTemplate | Config | Yes | |
@@ -196,8 +236,8 @@ Manages the lifecycle of active navigation — from previewing trips to active t
 | `showTripPreviews(_:selectedTrip:textConfiguration:)` | CPMapTemplate | JS→Native | Yes | |
 | `hideTripPreviews()` | CPMapTemplate | JS→Native | Yes | |
 | `showRouteChoicesPreview(for:textConfiguration:)` | CPMapTemplate | JS→Native | Yes | |
-| `startNavigationSession(for:)` | CPMapTemplate | JS→Native | Yes | |
-| `updateEstimates(_:for:)` | CPMapTemplate | JS→Native | Yes | |
+| `startNavigationSession(for:)` | CPMapTemplate | JS→Native | Yes | v1 |
+| `updateEstimates(_:for:)` | CPMapTemplate | JS→Native | Yes | v1 |
 | `update(_:for:with:)` | CPMapTemplate | JS→Native | Yes | |
 
 ### CPMapTemplateDelegate — Navigation Events
@@ -243,20 +283,20 @@ Manages the lifecycle of active navigation — from previewing trips to active t
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `trip` | CPNavigationSession | Config | Yes | |
-| `upcomingManeuvers` | CPNavigationSession | Config | Yes | |
+| `trip` | CPNavigationSession | Config | Yes | v1 |
+| `upcomingManeuvers` | CPNavigationSession | Config | Yes | v1 |
 | `maneuverState` | CPNavigationSession | Config | Yes | |
 | `currentRoadNameVariants` | CPNavigationSession | Config | Yes | |
 | `currentLaneGuidance` | CPNavigationSession | Config | Yes | |
 | `currentSegment` | CPNavigationSession | Config | Yes | |
 | `routeSegments` | CPNavigationSession | Config | Yes | |
 | `cancelTrip()` | CPNavigationSession | JS→Native | Yes | |
-| `finishTrip()` | CPNavigationSession | JS→Native | Yes | |
-| `pauseTrip(for:description:)` | CPNavigationSession | JS→Native | Yes | |
+| `finishTrip()` | CPNavigationSession | JS→Native | Yes | v1 |
+| `pauseTrip(for:description:)` | CPNavigationSession | JS→Native | Yes | v1 |
 | `pauseTrip(for:description:turnCardColor:)` | CPNavigationSession | JS→Native | Yes | |
 | `resumeTrip(updatedRouteInformation:)` | CPNavigationSession | JS→Native | Yes | |
 | `resumeTrip(updatedRouteSegments:currentSegment:rerouteReason:)` | CPNavigationSession | JS→Native | Yes | |
-| `updateEstimates(_:for:)` | CPNavigationSession | JS→Native | Yes | |
+| `updateEstimates(_:for:)` | CPNavigationSession | JS→Native | Yes | v1 |
 | `add(_:)` (maneuvers) | CPNavigationSession | JS→Native | Yes | |
 | `add(_:)` (lane guidances) | CPNavigationSession | JS→Native | Yes | |
 | `addRouteSegments(_:)` | CPNavigationSession | JS→Native | Yes | |
@@ -275,11 +315,11 @@ Manages the lifecycle of active navigation — from previewing trips to active t
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `init(origin:destination:routeChoices:)` | CPTrip | Config | Yes | |
+| `init(origin:destination:routeChoices:)` | CPTrip | Config | Yes | v1 |
 | `init(originWaypoint:destinationWaypoint:routeChoices:)` | CPTrip | Config | Yes | |
-| `origin` | CPTrip | Config | Yes | |
-| `destination` | CPTrip | Config | Yes | |
-| `routeChoices` | CPTrip | Config | Yes | |
+| `origin` | CPTrip | Config | Yes | v1 |
+| `destination` | CPTrip | Config | Yes | v1 |
+| `routeChoices` | CPTrip | Config | Yes | v1 |
 | `destinationNameVariants` | CPTrip | Config | Yes | |
 | `userInfo` | CPTrip | Config | Yes | |
 | `originWaypoint` | CPTrip | Config | Yes | |
@@ -291,21 +331,21 @@ Manages the lifecycle of active navigation — from previewing trips to active t
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `init(summaryVariants:additionalInformationVariants:selectionSummaryVariants:)` | CPRouteChoice | Config | Yes | |
-| `summaryVariants` | CPRouteChoice | Config | Yes | |
-| `additionalInformationVariants` | CPRouteChoice | Config | Yes | |
-| `selectionSummaryVariants` | CPRouteChoice | Config | Yes | |
+| `init(summaryVariants:additionalInformationVariants:selectionSummaryVariants:)` | CPRouteChoice | Config | Yes | v1 |
+| `summaryVariants` | CPRouteChoice | Config | Yes | v1 |
+| `additionalInformationVariants` | CPRouteChoice | Config | Yes | v1 |
+| `selectionSummaryVariants` | CPRouteChoice | Config | Yes | v1 |
 | `userInfo` | CPRouteChoice | Config | Yes | |
 
 ### CPTravelEstimates
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `init(distanceRemaining:timeRemaining:)` | CPTravelEstimates | Config | Yes | |
+| `init(distanceRemaining:timeRemaining:)` | CPTravelEstimates | Config | Yes | v1 |
 | `init(distanceRemaining:distanceRemainingToDisplay:timeRemaining:)` | CPTravelEstimates | Config | Yes | |
-| `distanceRemaining` | CPTravelEstimates | Config | Yes | |
+| `distanceRemaining` | CPTravelEstimates | Config | Yes | v1 |
 | `distanceRemainingToDisplay` | CPTravelEstimates | Config | Yes | |
-| `timeRemaining` | CPTravelEstimates | Config | Yes | |
+| `timeRemaining` | CPTravelEstimates | Config | Yes | v1 |
 
 ### CPRouteInformation (iOS 17.4+)
 
@@ -413,12 +453,12 @@ Represents turn-by-turn instructions. Each `CPManeuver` includes symbols, instru
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `instructionVariants` | CPManeuver | Config | Yes | |
+| `instructionVariants` | CPManeuver | Config | Yes | v1 |
 | `attributedInstructionVariants` | CPManeuver | Config | Yes | |
-| `symbolImage` | CPManeuver | Config | Yes | |
+| `symbolImage` | CPManeuver | Config | Yes | v1 |
 | `symbolSet` | CPManeuver | Config | Yes | |
 | `junctionImage` | CPManeuver | Config | Yes | |
-| `initialTravelEstimates` | CPManeuver | Config | Yes | |
+| `initialTravelEstimates` | CPManeuver | Config | Yes | v1 |
 | `userInfo` | CPManeuver | Config | Yes | |
 | `cardBackgroundColor` | CPManeuver | Config | Opt | |
 | `dashboardSymbolImage` | CPManeuver | Config | Yes | |
@@ -597,9 +637,9 @@ Represents turn-by-turn instructions. Each `CPManeuver` includes symbols, instru
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `init(lightContentImage:darkContentImage:)` | CPImageSet | Config | Yes | |
-| `lightContentImage` | CPImageSet | Config | Yes | |
-| `darkContentImage` | CPImageSet | Config | Yes | |
+| `init(lightContentImage:darkContentImage:)` | CPImageSet | Config | Yes | v1 |
+| `lightContentImage` | CPImageSet | Config | Yes | v1 |
+| `darkContentImage` | CPImageSet | Config | Yes | v1 |
 
 ---
 
