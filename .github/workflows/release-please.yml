@@ -38,5 +38,5 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: npx expo-module build && npx expo-module build plugin
 
-      - run: npm publish --provenance --access public
+      - run: npm publish --access public
         if: ${{ steps.release.outputs.release_created }}
