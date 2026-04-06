@@ -35,10 +35,9 @@
     "expo-module": "expo-module",
     "fix": "npm run format && npm run lint && npm run typecheck",
     "format": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\" && npm run --prefix example format && swiftformat ios/ --swift-version 6",
-    "postinstall": "patch-package && rm -f node_modules/.bin/prettier && ln -s ../prettier/bin/prettier.cjs node_modules/.bin/prettier && chmod +x node_modules/.bin/prettier",
     "lint": "expo-module lint src/ --fix && swiftlint --fix --quiet && npm run --prefix example lint",
     "open:ios": "xed example/ios",
-    "prepare": "expo-module prepare && expo-module build plugin",
+    "prepare": "patch-package && rm -f node_modules/.bin/prettier && ln -s ../prettier/bin/prettier.cjs node_modules/.bin/prettier && chmod +x node_modules/.bin/prettier && expo-module prepare && expo-module build plugin",
     "prepublishOnly": "expo-module prepublishOnly",
     "test": "expo-module test",
     "typecheck": "tsc --noEmit && npm run --prefix example typecheck"
