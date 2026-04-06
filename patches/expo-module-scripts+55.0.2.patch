@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-module-scripts/utils/commandUtils.js b/node_modules/expo-module-scripts/utils/commandUtils.js
+index 687b818..8c17fde 100644
+--- a/node_modules/expo-module-scripts/utils/commandUtils.js
++++ b/node_modules/expo-module-scripts/utils/commandUtils.js
+@@ -44,7 +44,7 @@ export function getArgs({ maybeAddWatchFlag = false } = {}) {
+ }
+ 
+ function shouldAddWatchFlag() {
+-  return process.stdout.isTTY && !process.env.CI && !process.env.EXPO_NONINTERACTIVE;
++  return false;
+ }
+ 
+ export function addWatchFlagIfNeeded(args) {
