@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.1...expo-carplay-v0.1.2) (2026-04-06)
+
+
+### Bug Fixes
+
+* trigger 0.1.2 release ([53205fc](https://github.com/bradford-tech/expo-carplay/commit/53205fccccc494b80bd993deff67ee17c6136232))
+
 ## [0.1.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.0...expo-carplay-v0.1.1) (2026-04-06)
 
 
