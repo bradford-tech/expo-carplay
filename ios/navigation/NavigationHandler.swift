@@ -24,6 +24,12 @@ final class NavigationHandler {
         // Must dispatch to main thread — CPMapTemplate operations are UIKit
         var sessionId: String?
         DispatchQueue.main.sync {
+            // End any existing session first — CPMapTemplate throws
+            // clientTripAlreadyStartedException if a trip is already active.
+            currentSession?.finishTrip()
+            currentSession = nil
+            currentTrip = nil
+
             let session = mapTemplate.startNavigationSession(for: trip)
             session.pauseTrip(for: .loading, description: "Loading route...")
             self.currentSession = session
