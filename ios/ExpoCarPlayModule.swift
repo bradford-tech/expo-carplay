@@ -19,11 +19,13 @@ public class ExpoCarPlayModule: Module {
             "onDisconnect",
             "onSearchTextUpdated",
             "onSearchResultSelected",
-            "onSearchButtonPressed"
+            "onSearchButtonPressed",
+            "onBarButtonPressed",
+            "onMapButtonPressed"
         )
 
-        AsyncFunction("createMapTemplate") { () -> String in
-            return MapTemplateHandler.shared.create()
+        AsyncFunction("createMapTemplate") { (config: [String: Any]?) -> String in
+            return MapTemplateHandler.shared.create(config: config)
         }
 
         AsyncFunction("setRootTemplate") { (templateId: String) in

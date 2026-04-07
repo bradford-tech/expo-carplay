@@ -16,8 +16,11 @@ Requires Expo SDK 55+ and iOS 15.0+.
 
 ```typescript
 import {
+  addBarButtonPressedListener,
   addConnectListener,
   createMapTemplate,
+  createSearchTemplate,
+  pushTemplate,
   setCarPlayRoute,
   setRootTemplate,
   startFollowingUser,
@@ -32,11 +35,26 @@ export default function App() {
   const { connected } = useCarPlay();
 
   useEffect(() => {
-    const subscription = addConnectListener(async () => {
-      const templateId = await createMapTemplate();
+    const connectSub = addConnectListener(async () => {
+      const templateId = await createMapTemplate({
+        leadingNavigationBarButtons: [
+          { id: "search", systemImage: "magnifyingglass" },
+        ],
+      });
       await setRootTemplate(templateId);
     });
-    return () => subscription.remove();
+
+    const barButtonSub = addBarButtonPressedListener(async ({ id }) => {
+      if (id === "search") {
+        const searchId = await createSearchTemplate();
+        await pushTemplate(searchId);
+      }
+    });
+
+    return () => {
+      connectSub.remove();
+      barButtonSub.remove();
+    };
   }, []);
 
   const handleStartNavigation = async () => {
@@ -112,15 +130,15 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | --- | --- | --- |
 | Expo Config Plugin | ● | Info.plist scene manifest, CarPlay entitlements, phone scene delegate bridge |
 | Scene Lifecycle | ● | Connect/disconnect events, interface controller & window references |
-| Interface Controller | Partial | `setRootTemplate` only; push/pop/present/dismiss not yet exposed |
-| Map Template | ● | Creation, map delegate, MKMapView with location tracking, route polylines |
+| Interface Controller | Partial | `setRootTemplate`, `pushTemplate`, `popTemplate`; present/dismiss not yet exposed |
+| Map Template | ● | Creation with button config, map delegate, MKMapView with location tracking, route polylines |
 | Navigation Session | ● | Start/stop, maneuver updates, travel estimate updates, pause/finish trip |
 | Maneuvers | Partial | `instructionVariants`, `symbolImage` (SF Symbols), `initialTravelEstimates` |
 | Trip & Route Choice | ● | Origin/destination, route choice summary variants |
 | Travel Estimates | ● | Distance remaining, time remaining |
 | List Template | ○ | Handler scaffolded, not wired to JS |
 | Grid Template | ○ | Handler scaffolded, not wired to JS |
-| Search Template | ○ | Handler scaffolded, not wired to JS |
+| Search Template | ● | Create, search text events, result selection, request ID pattern |
 | Tab Bar Template | ○ | Handler scaffolded, not wired to JS |
 | Information Template | ○ | Handler scaffolded, not wired to JS |
 | Voice Control Template | ○ | Handler scaffolded, not wired to JS |
@@ -149,8 +167,8 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | `addDisconnectListener(listener)` | Native→JS | ● |
 | `isConnected()` | JS | ● |
 | `setRootTemplate(templateId)` | JS→Native | ● |
-| `pushTemplate(_:animated:)` | JS→Native | ○ |
-| `popTemplate(animated:)` | JS→Native | ○ |
+| `pushTemplate(templateId)` | JS→Native | ● |
+| `popTemplate()` | JS→Native | ● |
 | `popToRootTemplate(animated:)` | JS→Native | ○ |
 | `presentTemplate(_:animated:)` | JS→Native | ○ |
 | `dismissTemplate(animated:)` | JS→Native | ○ |
@@ -161,14 +179,16 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 
 | API | Kind | Status |
 | --- | --- | --- |
-| `createMapTemplate()` | JS→Native | ● |
+| `createMapTemplate(config?)` | JS→Native | ● |
 | `startFollowingUser()` | JS→Native | ● |
 | `stopFollowingUser()` | JS→Native | ● |
 | `setCarPlayRoute(segments)` | JS→Native | ● |
 | `clearCarPlayRoute()` | JS→Native | ● |
 | Map delegate (panning events) | Native→JS | ○ |
-| Map buttons (zoom, pan, etc.) | Config | ○ |
-| Navigation bar buttons | Config | ○ |
+| Map buttons (`MapButtonConfig[]`) | Config | ● |
+| Navigation bar buttons (`BarButtonConfig[]`) | Config | ● |
+| `addBarButtonPressedListener(listener)` | Native→JS | ● |
+| `addMapButtonPressedListener(listener)` | Native→JS | ● |
 | `showPanningInterface(animated:)` | JS→Native | ○ |
 | `dismissPanningInterface(animated:)` | JS→Native | ○ |
 
@@ -232,10 +252,11 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 
 | API | Kind | Status |
 | --- | --- | --- |
-| `CPSearchTemplate` creation | JS→Native | ○ |
-| `updatedSearchText` delegate | Native→JS | ○ |
-| `selectedResult` delegate | Native→JS | ○ |
-| `searchButtonPressed` delegate | Native→JS | ○ |
+| `createSearchTemplate()` | JS→Native | ● |
+| `updateSearchResults(requestId, items)` | JS→Native | ● |
+| `addSearchTextListener(listener)` | Native→JS | ● |
+| `addSearchResultSelectedListener(listener)` | Native→JS | ● |
+| `addSearchButtonPressedListener(listener)` | Native→JS | ● |
 
 ### List Template
 
@@ -354,12 +375,15 @@ All types are exported from the package:
 
 ```typescript
 import type {
+  BarButtonConfig,
   Coordinate,
-  RouteSegment,
-  TripConfig,
+  MapButtonConfig,
+  MapTemplateConfig,
   ManeuverConfig,
+  RouteSegment,
+  SearchResultItem,
   TravelEstimates,
-  ImageSetConfig,
+  TripConfig,
 } from "@bradford-tech/expo-carplay";
 ```
 

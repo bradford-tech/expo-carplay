@@ -9,7 +9,7 @@ type ExpoCarPlayModule = {
     eventName: string,
     listener: (event: T) => void
   ): EventSubscription;
-  createMapTemplate(): Promise<string>;
+  createMapTemplate(config?: Record<string, unknown> | null): Promise<string>;
   setRootTemplate(templateId: string): Promise<void>;
   pushTemplate(templateId: string): Promise<void>;
   popTemplate(): Promise<void>;

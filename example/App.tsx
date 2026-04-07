@@ -1,4 +1,5 @@
 import {
+  addBarButtonPressedListener,
   addConnectListener,
   addSearchResultSelectedListener,
   addSearchTextListener,
@@ -82,12 +83,28 @@ export default function App() {
   const { connected } = useCarPlay();
 
   useEffect(() => {
-    const subscription = addConnectListener(async () => {
-      const templateId = await createMapTemplate();
+    const connectSub = addConnectListener(async () => {
+      const templateId = await createMapTemplate({
+        leadingNavigationBarButtons: [
+          { id: 'search', systemImage: 'magnifyingglass' },
+        ],
+      });
       await setRootTemplate(templateId);
       console.log('CarPlay: map template set as root');
     });
-    return () => subscription.remove();
+
+    const barButtonSub = addBarButtonPressedListener(async ({ id }) => {
+      if (id === 'search') {
+        const searchId = await createSearchTemplate();
+        await pushTemplate(searchId);
+        console.log('CarPlay: search template pushed');
+      }
+    });
+
+    return () => {
+      connectSub.remove();
+      barButtonSub.remove();
+    };
   }, []);
 
   // Handle search events
@@ -152,13 +169,6 @@ export default function App() {
     console.log('CarPlay: navigation stopped');
   };
 
-  const handleSearch = async () => {
-    if (!connected) return;
-    const templateId = await createSearchTemplate();
-    await pushTemplate(templateId);
-    console.log('CarPlay: search template pushed');
-  };
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
@@ -169,7 +179,6 @@ export default function App() {
           </Text>
           {connected && (
             <View style={styles.buttons}>
-              <Button title="Search" onPress={handleSearch} />
               <Button
                 title="Start Navigation"
                 onPress={handleStartNavigation}
