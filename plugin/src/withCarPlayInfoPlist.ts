@@ -141,7 +141,8 @@ class PhoneSceneDelegate: UIResponder, UIWindowSceneDelegate {
     options connectionOptions: UIScene.ConnectionOptions
   ) {
     guard let windowScene = scene as? UIWindowScene,
-          let window = UIApplication.shared.delegate?.window
+          let appDelegate = UIApplication.shared.delegate,
+          let window = appDelegate.window
     else { return }
     window.windowScene = windowScene
     self.window = window
