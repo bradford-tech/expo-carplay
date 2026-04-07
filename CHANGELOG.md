@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.5...expo-carplay-v0.1.6) (2026-04-07)
+
+
+### Bug Fixes
+
+* convert distances to locale units for CarPlay ([a8354d7](https://github.com/bradford-tech/expo-carplay/commit/a8354d7028be2a52770974a3d73a7a8c900461a1))
+
 ## [0.1.5](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.4...expo-carplay-v0.1.5) (2026-04-07)
 
 
