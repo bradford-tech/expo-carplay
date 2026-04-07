@@ -1,1 +1,391 @@
-WIP – README.md will be updated when module is ready
+# @bradford-tech/expo-carplay
+
+Expo module for integrating Apple CarPlay into React Native apps. Provides typed APIs for map templates, turn-by-turn navigation, maneuvers, travel estimates, and more — with an Expo config plugin for automatic iOS setup.
+
+> **Note:** This module is in active development. The core navigation flow is working (map, routes, maneuvers, travel estimates). Additional template types are planned. See the [API Surface](#api-surface) tables below for current status.
+
+## Install
+
+```sh
+npm install @bradford-tech/expo-carplay
+```
+
+Requires Expo SDK 55+ and iOS 15.0+.
+
+## Quick Start
+
+```typescript
+import {
+  addConnectListener,
+  createMapTemplate,
+  setCarPlayRoute,
+  setRootTemplate,
+  startFollowingUser,
+  startNavigation,
+  updateManeuvers,
+  updateTravelEstimates,
+  useCarPlay,
+} from "@bradford-tech/expo-carplay";
+import { useEffect } from "react";
+
+export default function App() {
+  const { connected } = useCarPlay();
+
+  useEffect(() => {
+    const subscription = addConnectListener(async () => {
+      const templateId = await createMapTemplate();
+      await setRootTemplate(templateId);
+    });
+    return () => subscription.remove();
+  }, []);
+
+  const handleStartNavigation = async () => {
+    if (!connected) return;
+
+    // 1. Draw the route polyline on the map
+    await setCarPlayRoute([
+      {
+        coordinates: [
+          { latitude: 37.335, longitude: -122.009 },
+          { latitude: 37.339, longitude: -122.005 },
+        ],
+        color: "systemTeal",
+      },
+    ]);
+
+    // 2. Enable native location tracking
+    await startFollowingUser();
+
+    // 3. Start the navigation session
+    await startNavigation({
+      origin: { latitude: 37.335, longitude: -122.009 },
+      destination: { latitude: 37.345, longitude: -122.002 },
+      routeChoices: [
+        {
+          summaryVariants: ["Via Infinite Loop", "Fastest route"],
+          additionalInformationVariants: ["0.5 mi — 2 min"],
+        },
+      ],
+    });
+
+    // 4. Set turn-by-turn maneuvers
+    await updateManeuvers([
+      {
+        instructionVariants: ["Head northeast on Infinite Loop"],
+        symbolImage: { systemName: "arrow.up" },
+        distanceRemaining: 800,
+        timeRemaining: 120,
+      },
+      {
+        instructionVariants: ["Turn right onto N De Anza Blvd"],
+        symbolImage: { systemName: "arrow.turn.up.right" },
+        distanceRemaining: 400,
+        timeRemaining: 60,
+      },
+    ]);
+
+    // 5. Update travel estimates
+    await updateTravelEstimates({ distanceRemaining: 800, timeRemaining: 120 }, 0);
+  };
+}
+```
+
+## Expo Config Plugin
+
+The module includes an Expo config plugin that automatically configures your iOS project:
+
+- Adds the CarPlay scene manifest to `Info.plist`
+- Adds CarPlay entitlements
+- Bridges the phone scene delegate for multi-scene support
+
+No manual Xcode configuration needed — just install and run `npx expo prebuild`.
+
+## API Surface
+
+The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from JavaScript/TypeScript. The tables below show every feature area and its implementation status.
+
+**Status:** ● Implemented · ○ Not yet implemented
+
+### Implementation Summary
+
+| Category | Status | Notes |
+| --- | --- | --- |
+| Expo Config Plugin | ● | Info.plist scene manifest, CarPlay entitlements, phone scene delegate bridge |
+| Scene Lifecycle | ● | Connect/disconnect events, interface controller & window references |
+| Interface Controller | Partial | `setRootTemplate` only; push/pop/present/dismiss not yet exposed |
+| Map Template | ● | Creation, map delegate, MKMapView with location tracking, route polylines |
+| Navigation Session | ● | Start/stop, maneuver updates, travel estimate updates, pause/finish trip |
+| Maneuvers | Partial | `instructionVariants`, `symbolImage` (SF Symbols), `initialTravelEstimates` |
+| Trip & Route Choice | ● | Origin/destination, route choice summary variants |
+| Travel Estimates | ● | Distance remaining, time remaining |
+| List Template | ○ | Handler scaffolded, not wired to JS |
+| Grid Template | ○ | Handler scaffolded, not wired to JS |
+| Search Template | ○ | Handler scaffolded, not wired to JS |
+| Tab Bar Template | ○ | Handler scaffolded, not wired to JS |
+| Information Template | ○ | Handler scaffolded, not wired to JS |
+| Voice Control Template | ○ | Handler scaffolded, not wired to JS |
+| Alerts & Action Sheets | ○ | Handler scaffolded, not wired to JS |
+| Session Configuration | ○ | Handler scaffolded, not wired to JS |
+| Contact Template | ○ | Not started |
+| Point of Interest | ○ | Not started |
+| Now Playing | ○ | Not started |
+| Dashboard & Instrument Cluster | ○ | Not started |
+| Multitouch (iOS 26+) | ○ | Not started |
+
+### React Hooks
+
+| Hook | Description | Status |
+| --- | --- | --- |
+| `useCarPlay()` | Returns `{ connected: boolean }` — reactive CarPlay connection state | ● |
+| `useMapTemplate()` | Map template lifecycle hook | ○ |
+| `useNavigationSession()` | Navigation session lifecycle hook | ○ |
+| `useSearchTemplate()` | Search template lifecycle hook | ○ |
+
+### Scene Lifecycle & Interface Controller
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `addConnectListener(listener)` | Native→JS | ● |
+| `addDisconnectListener(listener)` | Native→JS | ● |
+| `isConnected()` | JS | ● |
+| `setRootTemplate(templateId)` | JS→Native | ● |
+| `pushTemplate(_:animated:)` | JS→Native | ○ |
+| `popTemplate(animated:)` | JS→Native | ○ |
+| `popToRootTemplate(animated:)` | JS→Native | ○ |
+| `presentTemplate(_:animated:)` | JS→Native | ○ |
+| `dismissTemplate(animated:)` | JS→Native | ○ |
+| Interface controller delegate events | Native→JS | ○ |
+| Content style observation | Native→JS | ○ |
+
+### Map Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `createMapTemplate()` | JS→Native | ● |
+| `startFollowingUser()` | JS→Native | ● |
+| `stopFollowingUser()` | JS→Native | ● |
+| `setCarPlayRoute(segments)` | JS→Native | ● |
+| `clearCarPlayRoute()` | JS→Native | ● |
+| Map delegate (panning events) | Native→JS | ○ |
+| Map buttons (zoom, pan, etc.) | Config | ○ |
+| Navigation bar buttons | Config | ○ |
+| `showPanningInterface(animated:)` | JS→Native | ○ |
+| `dismissPanningInterface(animated:)` | JS→Native | ○ |
+
+### Navigation Session
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `startNavigation(trip)` | JS→Native | ● |
+| `stopNavigation()` | JS→Native | ● |
+| `updateManeuvers(maneuvers)` | JS→Native | ● |
+| `updateTravelEstimates(estimates, maneuverIndex?)` | JS→Native | ● |
+| `getActiveSessionId()` | JS | ● |
+| `showTripPreviews(_:textConfiguration:)` | JS→Native | ○ |
+| `hideTripPreviews()` | JS→Native | ○ |
+| `showRouteChoicesPreview(for:textConfiguration:)` | JS→Native | ○ |
+| `cancelTrip()` | JS→Native | ○ |
+| `pauseTrip(for:description:)` | JS→Native | ○ |
+| `resumeTrip(updatedRouteInformation:)` | JS→Native | ○ |
+| Map template navigation delegate events | Native→JS | ○ |
+
+### Trip & Route Choice
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPTrip` (origin, destination, routeChoices) | Config | ● |
+| `CPRouteChoice` (summaryVariants, additionalInformationVariants) | Config | ● |
+| `CPTravelEstimates` (distanceRemaining, timeRemaining) | Config | ● |
+| `CPTripPreviewTextConfiguration` | Config | ○ |
+| `CPRouteInformation` (iOS 17.4+) | Config | ○ |
+| `CPRouteSegment` (iOS 26.4+) | Config | ○ |
+| `CPNavigationWaypoint` (iOS 26.4+) | Config | ○ |
+
+### Maneuvers
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `instructionVariants` | Config | ● |
+| `symbolImage` (SF Symbols) | Config | ● |
+| `initialTravelEstimates` | Config | ● |
+| `attributedInstructionVariants` | Config | ○ |
+| `symbolSet` (CPImageSet) | Config | ○ |
+| `junctionImage` | Config | ○ |
+| `dashboardSymbolImage` / `dashboardInstructionVariants` | Config | ○ |
+| `notificationSymbolImage` / `notificationInstructionVariants` | Config | ○ |
+| `maneuverType` (54 cases) | Config | ○ |
+| `maneuverState` | Config | ○ |
+| `junctionType` / `trafficSide` | Config | ○ |
+| `linkedLaneGuidance` | Config | ○ |
+| Lane guidance (`CPLaneGuidance`, `CPLane`) | Config | ○ |
+
+### Navigation Alerts
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPNavigationAlert` (title, subtitle, image, actions, duration) | Config | ○ |
+| `present(navigationAlert:animated:)` | JS→Native | ○ |
+| `dismissNavigationAlert(animated:)` | JS→Native | ○ |
+| Navigation alert delegate events | Native→JS | ○ |
+
+### Search Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPSearchTemplate` creation | JS→Native | ○ |
+| `updatedSearchText` delegate | Native→JS | ○ |
+| `selectedResult` delegate | Native→JS | ○ |
+| `searchButtonPressed` delegate | Native→JS | ○ |
+
+### List Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPListTemplate` creation (title, sections) | JS→Native | ○ |
+| `CPListSection` (items, header) | Config | ○ |
+| `CPListItem` (text, detailText, image, handler) | Config | ○ |
+| `CPListImageRowItem` (text, images) | Config | ○ |
+| `updateSections(_:)` | JS→Native | ○ |
+| List item selection delegate | Native→JS | ○ |
+| Assistant cell configuration | Config | ○ |
+
+### Grid Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPGridTemplate` creation (title, gridButtons) | JS→Native | ○ |
+| `CPGridButton` (titleVariants, image, handler) | Config | ○ |
+| `updateGridButtons(_:)` | JS→Native | ○ |
+
+### Tab Bar Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPTabBarTemplate` creation (templates) | JS→Native | ○ |
+| `updateTemplates(_:)` | JS→Native | ○ |
+| Tab selection delegate | Native→JS | ○ |
+
+### Information Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPInformationTemplate` creation (title, layout, items, actions) | JS→Native | ○ |
+| `CPInformationItem` (title, detail) | Config | ○ |
+| `CPTextButton` (title, textStyle, handler) | Config | ○ |
+
+### Alert & Action Sheet Templates
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPAlertTemplate` (titleVariants, actions) | JS→Native | ○ |
+| `CPActionSheetTemplate` (title, message, actions) | JS→Native | ○ |
+| `CPAlertAction` (title, style, handler) | Config | ○ |
+
+### Voice Control Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPVoiceControlTemplate` (voiceControlStates) | JS→Native | ○ |
+| `CPVoiceControlState` (identifier, titleVariants, image) | Config | ○ |
+| `activateVoiceControlState(withIdentifier:)` | JS→Native | ○ |
+
+### Contact Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPContactTemplate` / `CPContact` | JS→Native | ○ |
+| Contact action buttons (call, directions, message) | Config | ○ |
+
+### Point of Interest Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPPointOfInterestTemplate` (title, pointsOfInterest) | JS→Native | ○ |
+| `CPPointOfInterest` (location, title, subtitle, pinImage) | Config | ○ |
+| Point of interest delegate events | Native→JS | ○ |
+
+### Now Playing Template
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPNowPlayingTemplate.shared` | Config | ○ |
+| Now playing buttons (rate, shuffle, repeat, etc.) | Config | ○ |
+| Now playing observer events | Native→JS | ○ |
+| Sports mode (iOS 18.4+) | Config | ○ |
+
+### Session Configuration
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPSessionConfiguration` (delegate) | Config | ○ |
+| Content style change events | Native→JS | ○ |
+| Limited user interface change events | Native→JS | ○ |
+
+### Dashboard & Instrument Cluster
+
+| API | Kind | Status |
+| --- | --- | --- |
+| `CPTemplateApplicationDashboardScene` | Config | ○ |
+| `CPDashboardController` / `CPDashboardButton` | Config | ○ |
+| `CPTemplateApplicationInstrumentClusterScene` | Config | ○ |
+| `CPInstrumentClusterController` | Config | ○ |
+
+### Multitouch (iOS 26+)
+
+| API | Kind | Status |
+| --- | --- | --- |
+| Zoom gestures (pinch, double-tap) | Native→JS | ○ |
+| Rotation gestures | Native→JS | ○ |
+| Pitch gestures | Native→JS | ○ |
+
+## How It Works
+
+The module has three layers:
+
+1. **TypeScript API** (`src/`) — Typed functions and React hooks that consumers import from `@bradford-tech/expo-carplay`.
+2. **Swift native module** (`ios/`) — Bridges to Apple's CarPlay framework using Expo modules core. Handles `CPTemplateApplicationSceneDelegate`, `CPMapTemplate`, `CPNavigationSession`, `MKMapView`, and the event pipeline back to JS.
+3. **Expo config plugin** (`plugin/`) — Automatically configures `Info.plist` with the CarPlay scene manifest and adds the required entitlements at prebuild time.
+
+The native layer manages the CarPlay map using `MKMapView` with native location tracking. Route polylines are rendered as colored `MKPolyline` overlays. Navigation sessions use `CPTrip`, `CPManeuver`, and `CPTravelEstimates` from the CarPlay framework.
+
+## Types
+
+All types are exported from the package:
+
+```typescript
+import type {
+  Coordinate,
+  RouteSegment,
+  TripConfig,
+  ManeuverConfig,
+  TravelEstimates,
+  ImageSetConfig,
+} from "@bradford-tech/expo-carplay";
+```
+
+## Contributing
+
+```sh
+git clone https://github.com/bradford-tech/expo-carplay.git
+cd expo-carplay
+npm install
+
+# Build the TypeScript library
+npm run build
+
+# Build the Expo config plugin
+npm run build:plugin
+
+# Format, lint, type-check
+npm run fix
+
+# Run the example app
+npm run dev
+
+# Open the iOS project in Xcode
+npm run open:ios
+```
+
+## License
+
+MIT
