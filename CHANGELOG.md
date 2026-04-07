@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.7...expo-carplay-v0.1.8) (2026-04-07)
+
+
+### Bug Fixes
+
+* resolve double optional in PhoneSceneDelegate ([5835d2a](https://github.com/bradford-tech/expo-carplay/commit/5835d2af7ae6c03e7af45bcafa0862fd0dfdbcd4))
+
 ## [0.1.7](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.6...expo-carplay-v0.1.7) (2026-04-07)
 
 
