@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.8...expo-carplay-v0.1.9) (2026-04-07)
+
+
+### Bug Fixes
+
+* double-unwrap optional window in PhoneSceneDelegate ([2764b20](https://github.com/bradford-tech/expo-carplay/commit/2764b2019b0a668bd8e06f26b8ae0df1a27b1789))
+
 ## [0.1.8](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.7...expo-carplay-v0.1.8) (2026-04-07)
 
 
