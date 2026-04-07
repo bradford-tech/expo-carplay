@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.4...expo-carplay-v0.1.5) (2026-04-07)
+
+
+### Features
+
+* **map:** add configurable bar and map buttons ([2b4edae](https://github.com/bradford-tech/expo-carplay/commit/2b4edae44066c6e65f8552b14387032a2ab967aa))
+
 ## [0.1.4](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.3...expo-carplay-v0.1.4) (2026-04-07)
 
 
