@@ -30,12 +30,12 @@ enum ManeuverBuilder {
         let timeSeconds = config["timeRemaining"] as? Double
         if let dist = distanceMeters, let time = timeSeconds {
             maneuver.initialTravelEstimates = CPTravelEstimates(
-                distanceRemaining: Measurement(value: dist, unit: .meters),
+                distanceRemaining: UnitConversion.localizedDistance(meters: dist),
                 timeRemaining: time
             )
         } else if let dist = distanceMeters {
             maneuver.initialTravelEstimates = CPTravelEstimates(
-                distanceRemaining: Measurement(value: dist, unit: .meters),
+                distanceRemaining: UnitConversion.localizedDistance(meters: dist),
                 timeRemaining: 0
             )
         }

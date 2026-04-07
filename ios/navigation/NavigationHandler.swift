@@ -64,7 +64,7 @@ final class NavigationHandler {
         maneuverIndex: Int?
     ) {
         let estimates = CPTravelEstimates(
-            distanceRemaining: Measurement(value: distanceRemaining, unit: .meters),
+            distanceRemaining: UnitConversion.localizedDistance(meters: distanceRemaining),
             timeRemaining: timeRemaining
         )
 
