@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.6...expo-carplay-v0.1.7) (2026-04-07)
+
+
+### Bug Fixes
+
+* remove redundant ?? nil in PhoneSceneDelegate ([879f300](https://github.com/bradford-tech/expo-carplay/commit/879f300071a700b89c8b184c025f479957e19441))
+
 ## [0.1.6](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.5...expo-carplay-v0.1.6) (2026-04-07)
 
 
