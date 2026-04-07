@@ -32,3 +32,11 @@ export function addDisconnectListener(listener: () => void): EventSubscription {
 export async function setRootTemplate(templateId: string): Promise<void> {
   await ExpoCarPlay.setRootTemplate(templateId);
 }
+
+export async function pushTemplate(templateId: string): Promise<void> {
+  await ExpoCarPlay.pushTemplate(templateId);
+}
+
+export async function popTemplate(): Promise<void> {
+  await ExpoCarPlay.popTemplate();
+}

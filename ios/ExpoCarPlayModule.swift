@@ -16,7 +16,10 @@ public class ExpoCarPlayModule: Module {
 
         Events(
             "onConnect",
-            "onDisconnect"
+            "onDisconnect",
+            "onSearchTextUpdated",
+            "onSearchResultSelected",
+            "onSearchButtonPressed"
         )
 
         AsyncFunction("createMapTemplate") { () -> String in
@@ -84,6 +87,46 @@ public class ExpoCarPlayModule: Module {
                 timeRemaining: estimates["timeRemaining"] ?? 0,
                 maneuverIndex: maneuverIndex
             )
+        }
+
+        AsyncFunction("createSearchTemplate") { () -> String in
+            return SearchTemplateHandler.shared.create()
+        }
+
+        AsyncFunction("updateSearchResults") { (requestId: String, items: [[String: String]]) in
+            SearchTemplateHandler.shared.updateResults(requestId: requestId, items: items)
+        }
+
+        AsyncFunction("pushTemplate") { (templateId: String) in
+            guard let template = TemplateStore.shared.get(templateId) else {
+                throw NSError(
+                    domain: "ExpoCarPlay",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Template not found: \(templateId)"]
+                )
+            }
+            guard let interfaceController = SceneSessionManager.shared.interfaceController else {
+                throw NSError(
+                    domain: "ExpoCarPlay",
+                    code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: "CarPlay not connected"]
+                )
+            }
+            DispatchQueue.main.async {
+                interfaceController.pushTemplate(template, animated: true, completion: nil)
+            }
+        }
+
+        AsyncFunction("popTemplate") { () in
+            guard let interfaceController = SceneSessionManager.shared.interfaceController else {
+                return // Silent no-op if not connected
+            }
+            DispatchQueue.main.async {
+                // Silent no-op if stack has only the root template
+                if interfaceController.templates.count > 1 {
+                    interfaceController.popTemplate(animated: true, completion: nil)
+                }
+            }
         }
     }
 }

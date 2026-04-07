@@ -1,7 +1,12 @@
 import {
   addConnectListener,
+  addSearchResultSelectedListener,
+  addSearchTextListener,
   clearCarPlayRoute,
   createMapTemplate,
+  createSearchTemplate,
+  popTemplate,
+  pushTemplate,
   setCarPlayRoute,
   setRootTemplate,
   startFollowingUser,
@@ -9,6 +14,7 @@ import {
   stopFollowingUser,
   stopNavigation,
   updateManeuvers,
+  updateSearchResults,
   updateTravelEstimates,
   useCarPlay,
 } from '@bradford-tech/expo-carplay';
@@ -25,7 +31,7 @@ const SAMPLE_ROUTE = [
       { latitude: 37.337, longitude: -122.006 },
       { latitude: 37.339, longitude: -122.005 },
     ],
-    color: 'systemTeal', // LSV-legal segment
+    color: 'systemTeal',
   },
   {
     coordinates: [
@@ -33,14 +39,14 @@ const SAMPLE_ROUTE = [
       { latitude: 37.341, longitude: -122.004 },
       { latitude: 37.343, longitude: -122.003 },
     ],
-    color: 'systemRed', // Non-LSV-legal segment
+    color: 'systemRed',
   },
   {
     coordinates: [
       { latitude: 37.343, longitude: -122.003 },
       { latitude: 37.345, longitude: -122.002 },
     ],
-    color: 'systemTeal', // LSV-legal again
+    color: 'systemTeal',
   },
 ];
 
@@ -65,6 +71,13 @@ const SAMPLE_MANEUVERS = [
   },
 ];
 
+// Mock search results
+const MOCK_DESTINATIONS = [
+  { text: 'Apple Park Visitor Center', detailText: '10600 N Tantau Ave' },
+  { text: 'Apple Infinite Loop', detailText: '1 Infinite Loop' },
+  { text: 'Apple Store, Stanford', detailText: '340 University Ave' },
+];
+
 export default function App() {
   const { connected } = useCarPlay();
 
@@ -77,16 +90,40 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
+  // Handle search events
+  useEffect(() => {
+    const textSub = addSearchTextListener(async ({ requestId, searchText }) => {
+      console.log(`CarPlay search: "${searchText}" (request: ${requestId})`);
+
+      // Filter mock results by search text
+      const filtered = MOCK_DESTINATIONS.filter(
+        d =>
+          searchText.length > 0 &&
+          d.text.toLowerCase().includes(searchText.toLowerCase())
+      );
+
+      // Simulate async backend delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      await updateSearchResults(requestId, filtered);
+      console.log(`CarPlay search: sent ${filtered.length} results`);
+    });
+
+    const selectSub = addSearchResultSelectedListener(({ text }) => {
+      console.log(`CarPlay search: selected "${text}"`);
+      popTemplate();
+    });
+
+    return () => {
+      textSub.remove();
+      selectSub.remove();
+    };
+  }, []);
+
   const handleStartNavigation = async () => {
     if (!connected) return;
-
-    // 1. Set the route polyline on the map
     await setCarPlayRoute(SAMPLE_ROUTE);
-
-    // 2. Start native location tracking
     await startFollowingUser();
-
-    // 3. Start the CarPlay navigation session
     const sessionId = await startNavigation({
       origin: SAMPLE_ROUTE[0].coordinates[0],
       destination:
@@ -101,12 +138,7 @@ export default function App() {
       ],
     });
     console.log('CarPlay: navigation started, session:', sessionId);
-
-    // 4. Set the turn-by-turn maneuvers
     await updateManeuvers(SAMPLE_MANEUVERS);
-    console.log('CarPlay: maneuvers set');
-
-    // 5. Set initial travel estimates
     await updateTravelEstimates(
       { distanceRemaining: 800, timeRemaining: 120 },
       0
@@ -120,6 +152,13 @@ export default function App() {
     console.log('CarPlay: navigation stopped');
   };
 
+  const handleSearch = async () => {
+    if (!connected) return;
+    const templateId = await createSearchTemplate();
+    await pushTemplate(templateId);
+    console.log('CarPlay: search template pushed');
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
@@ -130,6 +169,7 @@ export default function App() {
           </Text>
           {connected && (
             <View style={styles.buttons}>
+              <Button title="Search" onPress={handleSearch} />
               <Button
                 title="Start Navigation"
                 onPress={handleStartNavigation}

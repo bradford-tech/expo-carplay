@@ -5,12 +5,14 @@
 import { type EventSubscription, requireNativeModule } from 'expo-modules-core';
 
 type ExpoCarPlayModule = {
-  addListener(
-    eventName: 'onConnect' | 'onDisconnect',
-    listener: () => void
+  addListener<T = void>(
+    eventName: string,
+    listener: (event: T) => void
   ): EventSubscription;
   createMapTemplate(): Promise<string>;
   setRootTemplate(templateId: string): Promise<void>;
+  pushTemplate(templateId: string): Promise<void>;
+  popTemplate(): Promise<void>;
   startFollowingUser(): Promise<void>;
   stopFollowingUser(): Promise<void>;
   setCarPlayRoute(
@@ -40,6 +42,11 @@ type ExpoCarPlayModule = {
   updateTravelEstimates(
     estimates: { distanceRemaining: number; timeRemaining: number },
     maneuverIndex?: number
+  ): Promise<void>;
+  createSearchTemplate(): Promise<string>;
+  updateSearchResults(
+    requestId: string,
+    items: { text: string; detailText?: string }[]
   ): Promise<void>;
 };
 
