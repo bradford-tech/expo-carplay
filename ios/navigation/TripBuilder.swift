@@ -7,22 +7,24 @@ import MapKit
 
 enum TripBuilder {
     static func build(from config: [String: Any]) -> CPTrip? {
-        guard let originDict = config["origin"] as? [String: Double],
-              let destDict = config["destination"] as? [String: Double],
+        guard let originDict = config["origin"] as? [String: Any],
+              let destDict = config["destination"] as? [String: Any],
               let routeChoicesArray = config["routeChoices"] as? [[String: Any]]
         else { return nil }
 
         let originCoord = CLLocationCoordinate2D(
-            latitude: originDict["latitude"] ?? 0,
-            longitude: originDict["longitude"] ?? 0
+            latitude: originDict["latitude"] as? Double ?? 0,
+            longitude: originDict["longitude"] as? Double ?? 0
         )
         let destCoord = CLLocationCoordinate2D(
-            latitude: destDict["latitude"] ?? 0,
-            longitude: destDict["longitude"] ?? 0
+            latitude: destDict["latitude"] as? Double ?? 0,
+            longitude: destDict["longitude"] as? Double ?? 0
         )
 
         let originItem = MKMapItem(placemark: MKPlacemark(coordinate: originCoord))
+        originItem.name = (originDict["name"] as? String) ?? "Current Location"
         let destItem = MKMapItem(placemark: MKPlacemark(coordinate: destCoord))
+        destItem.name = (destDict["name"] as? String) ?? "Destination"
 
         let routeChoices = routeChoicesArray.compactMap { choiceDict -> CPRouteChoice? in
             guard let summaryVariants = choiceDict["summaryVariants"] as? [String] else { return nil }

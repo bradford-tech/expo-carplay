@@ -3,8 +3,8 @@
 // See: docs/carplay-api-surface.md §3
 
 export type TripConfig = {
-  origin: { latitude: number; longitude: number };
-  destination: { latitude: number; longitude: number };
+  origin: { latitude: number; longitude: number; name?: string };
+  destination: { latitude: number; longitude: number; name?: string };
   routeChoices: {
     summaryVariants: string[];
     additionalInformationVariants?: string[];
