@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.10...expo-carplay-v0.1.11) (2026-04-08)
+
+
+### Features
+
+* **navigation:** add name to trip origin and destination ([e8eac28](https://github.com/bradford-tech/expo-carplay/commit/e8eac28efa477ff3c2ab6c4b5caedbccc97e54ff))
+
 ## [0.1.10](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.9...expo-carplay-v0.1.10) (2026-04-08)
 
 
