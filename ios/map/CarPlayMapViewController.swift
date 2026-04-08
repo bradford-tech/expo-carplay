@@ -273,10 +273,18 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             lastKnownBearing = bearing(from: start, to: end)
         }
 
-        // Zoom to show the full route (camera follow will override once location updates arrive)
+        // Zoom to fit the route polyline. Left padding accounts for CarPlay's
+        // route choice panel (~40% of screen width). Minimal padding elsewhere
+        // maximizes the visible route area.
         if !routeOverlays.isEmpty {
             let rect = routeOverlays.reduce(MKMapRect.null) { $0.union($1.boundingMapRect) }
-            mapView.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 60, left: 60, bottom: 60, right: 60), animated: true)
+            let viewWidth = mapView.bounds.width
+            mapView.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(
+                top: 20,
+                left: viewWidth * 0.4,
+                bottom: 20,
+                right: 20
+            ), animated: true)
         }
     }
 
