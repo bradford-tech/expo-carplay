@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.14...expo-carplay-v0.1.15) (2026-04-08)
+
+
+### Features
+
+* **map:** add configurable edgePadding to setCarPlayRoute ([a4e122f](https://github.com/bradford-tech/expo-carplay/commit/a4e122f3e5ad7d3a539004a8b43de10ff6f5162b))
+
 ## [0.1.14](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.13...expo-carplay-v0.1.14) (2026-04-08)
 
 
