@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.19](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.18...expo-carplay-v0.1.19) (2026-04-08)
+
+
+### Bug Fixes
+
+* **map:** increase pill button font and padding ([3e11436](https://github.com/bradford-tech/expo-carplay/commit/3e1143685c9a2f27492d53f498565cf0f1c710a4))
+
 ## [0.1.18](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.17...expo-carplay-v0.1.18) (2026-04-08)
 
 
