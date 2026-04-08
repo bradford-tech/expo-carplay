@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.11...expo-carplay-v0.1.12) (2026-04-08)
+
+
+### Features
+
+* **navigation:** include routeIndex in trip events ([141b6a2](https://github.com/bradford-tech/expo-carplay/commit/141b6a295bb4a5f484e155d1bed750ded9fcef0f))
+
 ## [0.1.11](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.10...expo-carplay-v0.1.11) (2026-04-08)
 
 
