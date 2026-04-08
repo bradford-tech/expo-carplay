@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.18](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.17...expo-carplay-v0.1.18) (2026-04-08)
+
+
+### Features
+
+* **map:** add title and backgroundColor to MapButtonConfig ([202520b](https://github.com/bradford-tech/expo-carplay/commit/202520b238e34a11e339d8b2a6c45fdb39d53488))
+
 ## [0.1.17](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.16...expo-carplay-v0.1.17) (2026-04-08)
 
 
