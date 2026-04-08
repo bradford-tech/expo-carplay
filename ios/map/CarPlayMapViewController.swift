@@ -89,6 +89,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     private var lastKnownBearing: CLLocationDirection = 0
     private var routeOverlays: [MKPolyline] = []
     private var overlayColors: [MKPolyline: UIColor] = [:]
+    private var routeAnnotations: [MKPointAnnotation] = []
 
     /// Camera state
     private var isFollowing: Bool = false
@@ -285,6 +286,17 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             )
             mapView.setVisibleMapRect(rect, edgePadding: padding, animated: true)
         }
+
+        // Add start/end pins and hide the user location dot during preview
+        let startPin = MKPointAnnotation()
+        startPin.coordinate = allCoordinates.first!
+        startPin.title = "Start"
+        let endPin = MKPointAnnotation()
+        endPin.coordinate = allCoordinates.last!
+        endPin.title = "End"
+        routeAnnotations = [startPin, endPin]
+        mapView.addAnnotations(routeAnnotations)
+        mapView.showsUserLocation = false
     }
 
     private func _clearRouteOnMain() {
@@ -293,6 +305,9 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         }
         routeOverlays.removeAll()
         overlayColors.removeAll()
+        mapView.removeAnnotations(routeAnnotations)
+        routeAnnotations.removeAll()
+        mapView.showsUserLocation = true
         if let pts = routeMapPoints {
             pts.deallocate()
             routeMapPoints = nil
@@ -305,6 +320,31 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     }
 
     // MARK: - MKMapViewDelegate
+
+    func mapView(_: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        // Don't customize the user location dot
+        if annotation is MKUserLocation { return nil }
+
+        guard let pointAnnotation = annotation as? MKPointAnnotation else { return nil }
+
+        if pointAnnotation.title == "Start" {
+            let view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "start")
+            view.markerTintColor = .systemGreen
+            view.glyphImage = UIImage(systemName: "figure.wave")
+            view.displayPriority = .required
+            return view
+        }
+
+        if pointAnnotation.title == "End" {
+            let view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: "end")
+            view.markerTintColor = .systemRed
+            view.glyphImage = UIImage(systemName: "mappin")
+            view.displayPriority = .required
+            return view
+        }
+
+        return nil
+    }
 
     func mapView(_: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         if let polyline = overlay as? MKPolyline {
