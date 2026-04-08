@@ -18,11 +18,13 @@ Requires Expo SDK 55+ and iOS 15.0+.
 import {
   addBarButtonPressedListener,
   addConnectListener,
+  addTripStartedListener,
   createMapTemplate,
   createSearchTemplate,
   pushTemplate,
   setCarPlayRoute,
   setRootTemplate,
+  showTripPreviews,
   startFollowingUser,
   startNavigation,
   updateManeuvers,
@@ -30,6 +32,17 @@ import {
   useCarPlay,
 } from "@bradford-tech/expo-carplay";
 import { useEffect } from "react";
+
+const trip = {
+  origin: { latitude: 37.335, longitude: -122.009 },
+  destination: { latitude: 37.345, longitude: -122.002 },
+  routeChoices: [
+    {
+      summaryVariants: ["Via Infinite Loop", "Fastest route"],
+      additionalInformationVariants: ["0.5 mi — 2 min"],
+    },
+  ],
+};
 
 export default function App() {
   const { connected } = useCarPlay();
@@ -51,16 +64,32 @@ export default function App() {
       }
     });
 
+    // When user taps "Go" on a trip preview
+    const tripStartedSub = addTripStartedListener(async () => {
+      await startFollowingUser();
+      await startNavigation(trip);
+      await updateManeuvers([
+        {
+          instructionVariants: ["Head northeast on Infinite Loop"],
+          symbolImage: { systemName: "arrow.up" },
+          distanceRemaining: 800,
+          timeRemaining: 120,
+        },
+      ]);
+      await updateTravelEstimates({ distanceRemaining: 800, timeRemaining: 120 }, 0);
+    });
+
     return () => {
       connectSub.remove();
       barButtonSub.remove();
+      tripStartedSub.remove();
     };
   }, []);
 
   const handleStartNavigation = async () => {
     if (!connected) return;
 
-    // 1. Draw the route polyline on the map
+    // 1. Draw the route on the map
     await setCarPlayRoute([
       {
         coordinates: [
@@ -71,39 +100,8 @@ export default function App() {
       },
     ]);
 
-    // 2. Enable native location tracking
-    await startFollowingUser();
-
-    // 3. Start the navigation session
-    await startNavigation({
-      origin: { latitude: 37.335, longitude: -122.009 },
-      destination: { latitude: 37.345, longitude: -122.002 },
-      routeChoices: [
-        {
-          summaryVariants: ["Via Infinite Loop", "Fastest route"],
-          additionalInformationVariants: ["0.5 mi — 2 min"],
-        },
-      ],
-    });
-
-    // 4. Set turn-by-turn maneuvers
-    await updateManeuvers([
-      {
-        instructionVariants: ["Head northeast on Infinite Loop"],
-        symbolImage: { systemName: "arrow.up" },
-        distanceRemaining: 800,
-        timeRemaining: 120,
-      },
-      {
-        instructionVariants: ["Turn right onto N De Anza Blvd"],
-        symbolImage: { systemName: "arrow.turn.up.right" },
-        distanceRemaining: 400,
-        timeRemaining: 60,
-      },
-    ]);
-
-    // 5. Update travel estimates
-    await updateTravelEstimates({ distanceRemaining: 800, timeRemaining: 120 }, 0);
+    // 2. Show trip preview — user taps "Go" to start navigation
+    await showTripPreviews([trip]);
   };
 }
 ```
@@ -132,7 +130,7 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | Scene Lifecycle | ● | Connect/disconnect events, interface controller & window references |
 | Interface Controller | Partial | `setRootTemplate`, `pushTemplate`, `popTemplate`; present/dismiss not yet exposed |
 | Map Template | ● | Creation with button config, map delegate, MKMapView with location tracking, route polylines |
-| Navigation Session | ● | Start/stop, maneuver updates, travel estimate updates, pause/finish trip |
+| Navigation Session | ● | Start/stop, trip previews, maneuver updates, travel estimate updates |
 | Maneuvers | Partial | `instructionVariants`, `symbolImage` (SF Symbols), `initialTravelEstimates` |
 | Trip & Route Choice | ● | Origin/destination, route choice summary variants |
 | Travel Estimates | ● | Distance remaining, time remaining |
@@ -201,8 +199,10 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | `updateManeuvers(maneuvers)` | JS→Native | ● |
 | `updateTravelEstimates(estimates, maneuverIndex?)` | JS→Native | ● |
 | `getActiveSessionId()` | JS | ● |
-| `showTripPreviews(_:textConfiguration:)` | JS→Native | ○ |
-| `hideTripPreviews()` | JS→Native | ○ |
+| `showTripPreviews(trips)` | JS→Native | ● |
+| `hideTripPreviews()` | JS→Native | ● |
+| `addTripPreviewSelectedListener(listener)` | Native→JS | ● |
+| `addTripStartedListener(listener)` | Native→JS | ● |
 | `showRouteChoicesPreview(for:textConfiguration:)` | JS→Native | ○ |
 | `cancelTrip()` | JS→Native | ○ |
 | `pauseTrip(for:description:)` | JS→Native | ○ |
