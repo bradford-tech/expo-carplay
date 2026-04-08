@@ -27,7 +27,9 @@ type ExpoCarPlayModule = {
     }[];
     mapButtons?: {
       id: string;
-      systemImage: string;
+      systemImage?: string;
+      title?: string;
+      backgroundColor?: string;
       enabled?: boolean;
       hidden?: boolean;
     }[];

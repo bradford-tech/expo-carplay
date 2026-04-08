@@ -45,7 +45,11 @@ enum MapTemplateConverter {
                 CarPlayEventEmitter.shared.emit("onMapButtonPressed", ["id": id])
             }
 
-            if let systemImage = config["systemImage"] as? String {
+            if let title = config["title"] as? String {
+                // Render a pill-shaped image with text and optional background color
+                let bgColor = (config["backgroundColor"] as? String).flatMap { ColorConverter.color(from: $0) } ?? .systemBlue
+                button.image = renderPillImage(title: title, backgroundColor: bgColor)
+            } else if let systemImage = config["systemImage"] as? String {
                 button.image = UIImage(systemName: systemImage)
             }
 
@@ -58,6 +62,38 @@ enum MapTemplateConverter {
             }
 
             return button
+        }
+    }
+
+    // MARK: - Pill Image Rendering
+
+    private static func renderPillImage(title: String, backgroundColor: UIColor) -> UIImage {
+        let font = UIFont.boldSystemFont(ofSize: 18)
+        let textAttributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: UIColor.white
+        ]
+        let textSize = (title as NSString).size(withAttributes: textAttributes)
+        let padding = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        let imageSize = CGSize(
+            width: textSize.width + padding.left + padding.right,
+            height: textSize.height + padding.top + padding.bottom
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: imageSize)
+        return renderer.image { _ in
+            let rect = CGRect(origin: .zero, size: imageSize)
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: imageSize.height / 2)
+            backgroundColor.setFill()
+            path.fill()
+
+            let textRect = CGRect(
+                x: padding.left,
+                y: padding.top,
+                width: textSize.width,
+                height: textSize.height
+            )
+            (title as NSString).draw(in: textRect, withAttributes: textAttributes)
         }
     }
 }

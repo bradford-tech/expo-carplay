@@ -22,7 +22,12 @@ export type BarButtonConfig = {
 
 export type MapButtonConfig = {
   id: string;
-  systemImage: string;
+  /** SF Symbol name for the button icon */
+  systemImage?: string;
+  /** Text label — renders as a pill-shaped button (use with backgroundColor) */
+  title?: string;
+  /** Hex color for pill background (e.g., "#FF3B30"). Only used with title. */
+  backgroundColor?: string;
   enabled?: boolean;
   hidden?: boolean;
 };
