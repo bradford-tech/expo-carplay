@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.9...expo-carplay-v0.1.10) (2026-04-08)
+
+
+### Features
+
+* **navigation:** add trip preview support ([968a022](https://github.com/bradford-tech/expo-carplay/commit/968a022cbd6dfcf84f3228c983f218bf20021642))
+
 ## [0.1.9](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.8...expo-carplay-v0.1.9) (2026-04-07)
 
 
