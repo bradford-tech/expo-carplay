@@ -32,7 +32,7 @@ enum TripBuilder {
             return CPRouteChoice(
                 summaryVariants: summaryVariants,
                 additionalInformationVariants: additionalInfo,
-                selectionSummaryVariants: summaryVariants
+                selectionSummaryVariants: additionalInfo.isEmpty ? summaryVariants : additionalInfo
             )
         }
 
