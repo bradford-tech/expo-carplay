@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.14](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.13...expo-carplay-v0.1.14) (2026-04-08)
+
+
+### Bug Fixes
+
+* **map:** add left padding for route choice panel ([925e43c](https://github.com/bradford-tech/expo-carplay/commit/925e43c41c0aefb97c19876295728f388abf092f))
+
 ## [0.1.13](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.12...expo-carplay-v0.1.13) (2026-04-08)
 
 
