@@ -68,13 +68,13 @@ enum MapTemplateConverter {
     // MARK: - Pill Image Rendering
 
     private static func renderPillImage(title: String, backgroundColor: UIColor) -> UIImage {
-        let font = UIFont.boldSystemFont(ofSize: 18)
+        let font = UIFont.boldSystemFont(ofSize: 24)
         let textAttributes: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: UIColor.white
         ]
         let textSize = (title as NSString).size(withAttributes: textAttributes)
-        let padding = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        let padding = UIEdgeInsets(top: 12, left: 24, bottom: 12, right: 24)
         let imageSize = CGSize(
             width: textSize.width + padding.left + padding.right,
             height: textSize.height + padding.top + padding.bottom
