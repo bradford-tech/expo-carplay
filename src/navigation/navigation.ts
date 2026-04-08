@@ -50,13 +50,13 @@ export async function hideTripPreviews(): Promise<void> {
 }
 
 export function addTripPreviewSelectedListener(
-  listener: (event: { tripIndex: number }) => void
+  listener: (event: { tripIndex: number; routeIndex: number }) => void
 ): EventSubscription {
   return ExpoCarPlay.addListener('onTripPreviewSelected', listener);
 }
 
 export function addTripStartedListener(
-  listener: (event: { tripIndex: number }) => void
+  listener: (event: { tripIndex: number; routeIndex: number }) => void
 ): EventSubscription {
   return ExpoCarPlay.addListener('onTripStarted', listener);
 }
