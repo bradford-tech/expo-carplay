@@ -30,6 +30,10 @@ public class ExpoCarPlayModule: Module {
             return MapTemplateHandler.shared.create(config: config)
         }
 
+        AsyncFunction("updateMapTemplateButtons") { (config: [String: Any]) in
+            MapTemplateHandler.shared.updateButtons(config: config)
+        }
+
         AsyncFunction("setRootTemplate") { (templateId: String) in
             guard let template = TemplateStore.shared.get(templateId) else {
                 throw NSError(

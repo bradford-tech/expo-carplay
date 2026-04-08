@@ -40,6 +40,24 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         return TemplateStore.shared.store(template)
     }
 
+    func updateButtons(config: [String: Any]) {
+        guard let interfaceController = SceneSessionManager.shared.interfaceController,
+              let mapTemplate = interfaceController.rootTemplate as? CPMapTemplate
+        else { return }
+
+        DispatchQueue.main.async {
+            if let leading = config["leadingNavigationBarButtons"] as? [[String: Any]] {
+                mapTemplate.leadingNavigationBarButtons = MapTemplateConverter.buildBarButtons(from: leading)
+            }
+            if let trailing = config["trailingNavigationBarButtons"] as? [[String: Any]] {
+                mapTemplate.trailingNavigationBarButtons = MapTemplateConverter.buildBarButtons(from: trailing)
+            }
+            if let mapButtons = config["mapButtons"] as? [[String: Any]] {
+                mapTemplate.mapButtons = MapTemplateConverter.buildMapButtons(from: mapButtons)
+            }
+        }
+    }
+
     // MARK: - CPMapTemplateDelegate
 
     /// Required by iOS 26.4+ — CarPlayTemplateUIHost calls this during

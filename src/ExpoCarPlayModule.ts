@@ -10,6 +10,28 @@ type ExpoCarPlayModule = {
     listener: (event: T) => void
   ): EventSubscription;
   createMapTemplate(config?: Record<string, unknown> | null): Promise<string>;
+  updateMapTemplateButtons(config: {
+    leadingNavigationBarButtons?: {
+      id: string;
+      title?: string;
+      systemImage?: string;
+      style?: 'none' | 'rounded';
+      enabled?: boolean;
+    }[];
+    trailingNavigationBarButtons?: {
+      id: string;
+      title?: string;
+      systemImage?: string;
+      style?: 'none' | 'rounded';
+      enabled?: boolean;
+    }[];
+    mapButtons?: {
+      id: string;
+      systemImage: string;
+      enabled?: boolean;
+      hidden?: boolean;
+    }[];
+  }): Promise<void>;
   setRootTemplate(templateId: string): Promise<void>;
   pushTemplate(templateId: string): Promise<void>;
   popTemplate(): Promise<void>;
