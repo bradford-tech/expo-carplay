@@ -19,7 +19,13 @@ type ExpoCarPlayModule = {
     segments: {
       coordinates: { latitude: number; longitude: number }[];
       color: string;
-    }[]
+    }[],
+    edgePadding?: {
+      top?: number;
+      left?: number;
+      bottom?: number;
+      right?: number;
+    } | null
   ): Promise<void>;
   clearCarPlayRoute(): Promise<void>;
   startNavigation(tripConfig: {

@@ -129,9 +129,9 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         locationManager.stopUpdatingLocation()
     }
 
-    func setRoute(segments: [[String: Any]]) {
+    func setRoute(segments: [[String: Any]], edgePadding: [String: Double]? = nil) {
         DispatchQueue.main.async { [self] in
-            _setRouteOnMain(segments: segments)
+            _setRouteOnMain(segments: segments, edgePadding: edgePadding)
         }
     }
 
@@ -224,7 +224,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     // MARK: - Route Management
 
-    private func _setRouteOnMain(segments: [[String: Any]]) {
+    private func _setRouteOnMain(segments: [[String: Any]], edgePadding: [String: Double]? = nil) {
         _clearRouteOnMain()
 
         // Collect all coordinates across all segments for route projection math
@@ -273,18 +273,17 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             lastKnownBearing = bearing(from: start, to: end)
         }
 
-        // Zoom to fit the route polyline. Left padding accounts for CarPlay's
-        // route choice panel (~40% of screen width). Minimal padding elsewhere
-        // maximizes the visible route area.
+        // Zoom to fit the route polyline. Padding is configurable from JS —
+        // callers can adjust for UI overlays (e.g., route choice panel).
         if !routeOverlays.isEmpty {
             let rect = routeOverlays.reduce(MKMapRect.null) { $0.union($1.boundingMapRect) }
-            let viewWidth = mapView.bounds.width
-            mapView.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(
-                top: 20,
-                left: viewWidth * 0.4,
-                bottom: 20,
-                right: 20
-            ), animated: true)
+            let padding = UIEdgeInsets(
+                top: edgePadding?["top"] ?? 40,
+                left: edgePadding?["left"] ?? 40,
+                bottom: edgePadding?["bottom"] ?? 40,
+                right: edgePadding?["right"] ?? 40
+            )
+            mapView.setVisibleMapRect(rect, edgePadding: padding, animated: true)
         }
     }
 

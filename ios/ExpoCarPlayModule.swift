@@ -58,8 +58,8 @@ public class ExpoCarPlayModule: Module {
             MapTemplateHandler.shared.stopFollowingUser()
         }
 
-        AsyncFunction("setCarPlayRoute") { (segments: [[String: Any]]) in
-            MapTemplateHandler.shared.setRoute(segments: segments)
+        AsyncFunction("setCarPlayRoute") { (segments: [[String: Any]], edgePadding: [String: Double]?) in
+            MapTemplateHandler.shared.setRoute(segments: segments, edgePadding: edgePadding)
         }
 
         AsyncFunction("clearCarPlayRoute") { () in

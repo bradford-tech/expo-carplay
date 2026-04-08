@@ -5,7 +5,7 @@
 import type { EventSubscription } from 'expo-modules-core';
 
 import ExpoCarPlay from '../ExpoCarPlayModule';
-import type { MapTemplateConfig, RouteSegment } from './map.types';
+import type { EdgePadding, MapTemplateConfig, RouteSegment } from './map.types';
 
 export async function createMapTemplate(
   config?: MapTemplateConfig
@@ -21,8 +21,11 @@ export async function stopFollowingUser(): Promise<void> {
   await ExpoCarPlay.stopFollowingUser();
 }
 
-export async function setCarPlayRoute(segments: RouteSegment[]): Promise<void> {
-  await ExpoCarPlay.setCarPlayRoute(segments);
+export async function setCarPlayRoute(
+  segments: RouteSegment[],
+  edgePadding?: EdgePadding
+): Promise<void> {
+  await ExpoCarPlay.setCarPlayRoute(segments, edgePadding ?? null);
 }
 
 export async function clearCarPlayRoute(): Promise<void> {

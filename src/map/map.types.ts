@@ -27,6 +27,13 @@ export type MapButtonConfig = {
   hidden?: boolean;
 };
 
+export type EdgePadding = {
+  top?: number;
+  left?: number;
+  bottom?: number;
+  right?: number;
+};
+
 export type MapTemplateConfig = {
   leadingNavigationBarButtons?: BarButtonConfig[];
   trailingNavigationBarButtons?: BarButtonConfig[];
