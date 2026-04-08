@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.16...expo-carplay-v0.1.17) (2026-04-08)
+
+
+### Features
+
+* **map:** add updateMapTemplateButtons API ([db11379](https://github.com/bradford-tech/expo-carplay/commit/db1137933785896f7d0bd170d2533114cd9213e5))
+
 ## [0.1.16](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.15...expo-carplay-v0.1.16) (2026-04-08)
 
 
