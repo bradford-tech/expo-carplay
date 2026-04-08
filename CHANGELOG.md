@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.12...expo-carplay-v0.1.13) (2026-04-08)
+
+
+### Bug Fixes
+
+* **navigation:** use additionalInfo for selectionSummaryVariants ([1d26439](https://github.com/bradford-tech/expo-carplay/commit/1d26439e626c27750e814c53dc69795bb838b185))
+
 ## [0.1.12](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.11...expo-carplay-v0.1.12) (2026-04-08)
 
 
