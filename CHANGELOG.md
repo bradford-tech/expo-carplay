@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.16](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.15...expo-carplay-v0.1.16) (2026-04-08)
+
+
+### Features
+
+* **map:** add start and end pins to route preview ([1e4b48d](https://github.com/bradford-tech/expo-carplay/commit/1e4b48d883798c56c39f3b9851dde8d71e90fa8b))
+
 ## [0.1.15](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.14...expo-carplay-v0.1.15) (2026-04-08)
 
 
