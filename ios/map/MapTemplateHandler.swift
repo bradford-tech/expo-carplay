@@ -49,6 +49,16 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         false
     }
 
+    func mapTemplate(_: CPMapTemplate, selectedPreviewFor trip: CPTrip, using _: CPRouteChoice) {
+        guard let tripIndex = NavigationHandler.shared.tripIndex(for: trip) else { return }
+        CarPlayEventEmitter.shared.emit("onTripPreviewSelected", ["tripIndex": tripIndex])
+    }
+
+    func mapTemplate(_: CPMapTemplate, startedTrip trip: CPTrip, using _: CPRouteChoice) {
+        guard let tripIndex = NavigationHandler.shared.tripIndex(for: trip) else { return }
+        CarPlayEventEmitter.shared.emit("onTripStarted", ["tripIndex": tripIndex])
+    }
+
     // MARK: - Map VC Access
 
     private var mapViewController: CarPlayMapViewController? {

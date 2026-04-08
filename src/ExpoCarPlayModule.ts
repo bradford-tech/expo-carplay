@@ -31,6 +31,17 @@ type ExpoCarPlayModule = {
     }[];
   }): Promise<string>;
   stopNavigation(): Promise<void>;
+  showTripPreviews(
+    trips: {
+      origin: { latitude: number; longitude: number };
+      destination: { latitude: number; longitude: number };
+      routeChoices: {
+        summaryVariants: string[];
+        additionalInformationVariants?: string[];
+      }[];
+    }[]
+  ): Promise<void>;
+  hideTripPreviews(): Promise<void>;
   updateManeuvers(
     maneuvers: {
       instructionVariants: string[];

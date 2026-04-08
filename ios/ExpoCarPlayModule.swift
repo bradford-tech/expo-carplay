@@ -21,7 +21,9 @@ public class ExpoCarPlayModule: Module {
             "onSearchResultSelected",
             "onSearchButtonPressed",
             "onBarButtonPressed",
-            "onMapButtonPressed"
+            "onMapButtonPressed",
+            "onTripPreviewSelected",
+            "onTripStarted"
         )
 
         AsyncFunction("createMapTemplate") { (config: [String: Any]?) -> String in
@@ -77,6 +79,14 @@ public class ExpoCarPlayModule: Module {
 
         AsyncFunction("stopNavigation") { () in
             NavigationHandler.shared.stopNavigation()
+        }
+
+        AsyncFunction("showTripPreviews") { (trips: [[String: Any]]) in
+            NavigationHandler.shared.showTripPreviews(tripConfigs: trips)
+        }
+
+        AsyncFunction("hideTripPreviews") { () in
+            NavigationHandler.shared.hideTripPreviews()
         }
 
         AsyncFunction("updateManeuvers") { (maneuvers: [[String: Any]]) in

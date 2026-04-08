@@ -10,6 +10,7 @@ final class NavigationHandler {
 
     private var currentSession: CPNavigationSession?
     private var currentTrip: CPTrip?
+    private(set) var previewedTrips: [CPTrip] = []
 
     private init() {}
 
@@ -45,6 +46,33 @@ final class NavigationHandler {
             currentSession = nil
             currentTrip = nil
         }
+    }
+
+    // MARK: - Trip Previews
+
+    func showTripPreviews(tripConfigs: [[String: Any]]) {
+        let trips = tripConfigs.compactMap { TripBuilder.build(from: $0) }
+        guard !trips.isEmpty, let mapTemplate = findMapTemplate() else { return }
+
+        previewedTrips = trips
+
+        DispatchQueue.main.async {
+            mapTemplate.showTripPreviews(trips, textConfiguration: nil)
+        }
+    }
+
+    func hideTripPreviews() {
+        guard let mapTemplate = findMapTemplate() else { return }
+
+        previewedTrips = []
+
+        DispatchQueue.main.async {
+            mapTemplate.hideTripPreviews()
+        }
+    }
+
+    func tripIndex(for trip: CPTrip) -> Int? {
+        previewedTrips.firstIndex(where: { $0 === trip })
     }
 
     // MARK: - Maneuver Updates

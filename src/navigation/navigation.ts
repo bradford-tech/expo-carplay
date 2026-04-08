@@ -2,6 +2,8 @@
 // Typed API for CPNavigationSession lifecycle.
 // See: docs/carplay-api-surface.md §3 — Navigation Session & Route Guidance
 
+import type { EventSubscription } from 'expo-modules-core';
+
 import ExpoCarPlay from '../ExpoCarPlayModule';
 import type {
   ManeuverConfig,
@@ -37,4 +39,24 @@ export async function updateTravelEstimates(
 
 export function getActiveSessionId(): string | null {
   return activeSessionId;
+}
+
+export async function showTripPreviews(trips: TripConfig[]): Promise<void> {
+  await ExpoCarPlay.showTripPreviews(trips);
+}
+
+export async function hideTripPreviews(): Promise<void> {
+  await ExpoCarPlay.hideTripPreviews();
+}
+
+export function addTripPreviewSelectedListener(
+  listener: (event: { tripIndex: number }) => void
+): EventSubscription {
+  return ExpoCarPlay.addListener('onTripPreviewSelected', listener);
+}
+
+export function addTripStartedListener(
+  listener: (event: { tripIndex: number }) => void
+): EventSubscription {
+  return ExpoCarPlay.addListener('onTripStarted', listener);
 }
