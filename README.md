@@ -185,6 +185,7 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | Map delegate (panning events) | Native→JS | ○ |
 | Map buttons (`MapButtonConfig[]`) | Config | ● |
 | Navigation bar buttons (`BarButtonConfig[]`) | Config | ● |
+| `updateMapTemplateButtons(config)` | JS→Native | ● |
 | `addBarButtonPressedListener(listener)` | Native→JS | ● |
 | `addMapButtonPressedListener(listener)` | Native→JS | ● |
 | `showPanningInterface(animated:)` | JS→Native | ○ |
