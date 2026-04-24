@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.21](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.20...expo-carplay-v0.1.21) (2026-04-24)
+
+
+### Bug Fixes
+
+* **map:** center map via setRegion instead of userTrackingMode ([619f8a3](https://github.com/bradford-tech/expo-carplay/commit/619f8a378ccf49d3104c37c741ba7ff1f816c061))
+
 ## [0.1.20](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.19...expo-carplay-v0.1.20) (2026-04-24)
 
 
