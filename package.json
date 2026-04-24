@@ -42,15 +42,19 @@
     "test": "expo-module test",
     "typecheck": "tsc --noEmit && npm run --prefix example typecheck"
   },
+  "overrides": {
+    "@tootallnate/once": "^3.0.1",
+    "uuid": "^14.0.0"
+  },
   "devDependencies": {
     "@types/react": "~19.2.10",
-    "expo": "^55.0.11",
+    "expo": "~55.0.17",
     "expo-module-scripts": "^55.0.2",
     "patch-package": "^8.0.1",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-packagejson": "^3.0.2",
-    "react-native": "0.83.4"
+    "react-native": "0.83.6"
   },
   "peerDependencies": {
     "expo": "*",
