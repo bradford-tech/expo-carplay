@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.20](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.19...expo-carplay-v0.1.20) (2026-04-24)
+
+
+### Bug Fixes
+
+* **map:** center map on user immediately on follow ([57c727b](https://github.com/bradford-tech/expo-carplay/commit/57c727bbbc267a26cf1162a3f89b29a9260799da))
+
 ## [0.1.19](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.18...expo-carplay-v0.1.19) (2026-04-08)
 
 
