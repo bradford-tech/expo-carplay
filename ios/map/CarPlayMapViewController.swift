@@ -93,6 +93,8 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     /// Camera state
     private var isFollowing: Bool = false
+    /// When true, the next didUpdate userLocation callback centers the map.
+    private var needsInitialCenter: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -125,14 +127,17 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             locationManager.requestWhenInUseAuthorization()
             locationManager.startUpdatingLocation()
 
-            // Use MKMapView's built-in user tracking for immediate centering.
-            // Without this, the camera waits for CLLocationManager's first
-            // didUpdateLocations callback, leaving the map at the default US view.
-            // During navigation, didUpdateLocations drives the pitched camera and
-            // sets mapView.camera directly, which auto-resets userTrackingMode
-            // to .none — so there's no conflict with the custom camera.
+            // Center the map on the user when no route is active.
+            // userTrackingMode = .follow doesn't reliably center the CarPlay
+            // map, so we center explicitly via setRegion — either immediately
+            // from the already-known userLocation, or on the next
+            // mapView(_:didUpdate:) callback.
             if !routeActive {
-                mapView.userTrackingMode = .follow
+                if let location = mapView.userLocation.location {
+                    _centerOnUserLocation(location.coordinate)
+                } else {
+                    needsInitialCenter = true
+                }
             }
         }
     }
@@ -140,6 +145,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     func stopFollowingUser() {
         DispatchQueue.main.async { [self] in
             isFollowing = false
+            needsInitialCenter = false
             locationManager.stopUpdatingLocation()
         }
     }
@@ -154,6 +160,16 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         DispatchQueue.main.async { [self] in
             _clearRouteOnMain()
         }
+    }
+
+    private func _centerOnUserLocation(_ coordinate: CLLocationCoordinate2D) {
+        needsInitialCenter = false
+        let region = MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: 1000,
+            longitudinalMeters: 1000
+        )
+        mapView.setRegion(region, animated: true)
     }
 
     // MARK: - CLLocationManagerDelegate
@@ -334,6 +350,11 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     }
 
     // MARK: - MKMapViewDelegate
+
+    func mapView(_: MKMapView, didUpdate userLocation: MKUserLocation) {
+        guard needsInitialCenter, let location = userLocation.location else { return }
+        _centerOnUserLocation(location.coordinate)
+    }
 
     func mapView(_: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         // Don't customize the user location dot
