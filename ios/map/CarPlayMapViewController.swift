@@ -120,14 +120,28 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     // MARK: - Public API
 
     func startFollowingUser() {
-        isFollowing = true
-        locationManager.requestWhenInUseAuthorization()
-        locationManager.startUpdatingLocation()
+        DispatchQueue.main.async { [self] in
+            isFollowing = true
+            locationManager.requestWhenInUseAuthorization()
+            locationManager.startUpdatingLocation()
+
+            // Use MKMapView's built-in user tracking for immediate centering.
+            // Without this, the camera waits for CLLocationManager's first
+            // didUpdateLocations callback, leaving the map at the default US view.
+            // During navigation, didUpdateLocations drives the pitched camera and
+            // sets mapView.camera directly, which auto-resets userTrackingMode
+            // to .none — so there's no conflict with the custom camera.
+            if !routeActive {
+                mapView.userTrackingMode = .follow
+            }
+        }
     }
 
     func stopFollowingUser() {
-        isFollowing = false
-        locationManager.stopUpdatingLocation()
+        DispatchQueue.main.async { [self] in
+            isFollowing = false
+            locationManager.stopUpdatingLocation()
+        }
     }
 
     func setRoute(segments: [[String: Any]], edgePadding: [String: Double]? = nil) {
