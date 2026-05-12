@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.2.0...expo-carplay-v0.2.1) (2026-05-12)
+
+
+### Features
+
+* **shared:** add typed Records and Exception subclasses ([79ddc51](https://github.com/bradford-tech/expo-carplay/commit/79ddc512641bad1edcf1d2bf8a6d8d6bbaa9c8fb))
+
+
+### Bug Fixes
+
+* **map:** match Apple's hidesButtonsWithNavigationBar default ([29fa73f](https://github.com/bradford-tech/expo-carplay/commit/29fa73f927919d54d9cc6611c315e922bed1d890))
+
 ## [0.2.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.21...expo-carplay-v0.2.0) (2026-05-12)
 
 
