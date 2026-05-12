@@ -88,7 +88,7 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         mapViewController?.stopFollowingUser()
     }
 
-    func setRoute(segments: [[String: Any]], edgePadding: [String: Double]? = nil) {
+    func setRoute(segments: [RouteSegment], edgePadding: EdgePadding?) {
         mapViewController?.setRoute(segments: segments, edgePadding: edgePadding)
     }
 

@@ -150,7 +150,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         }
     }
 
-    func setRoute(segments: [[String: Any]], edgePadding: [String: Double]? = nil) {
+    func setRoute(segments: [RouteSegment], edgePadding: EdgePadding? = nil) {
         DispatchQueue.main.async { [self] in
             _setRouteOnMain(segments: segments, edgePadding: edgePadding)
         }
@@ -255,24 +255,22 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     // MARK: - Route Management
 
-    private func _setRouteOnMain(segments: [[String: Any]], edgePadding: [String: Double]? = nil) {
+    private func _setRouteOnMain(segments: [RouteSegment], edgePadding: EdgePadding? = nil) {
         _clearRouteOnMain()
+
+        // Resolve nil to defaults at the boundary — handler logic uses a real Record.
+        let edgePadding = edgePadding ?? EdgePadding()
 
         // Collect all coordinates across all segments for route projection math
         var allCoordinates: [CLLocationCoordinate2D] = []
 
-        for segmentDict in segments {
-            guard let coordArray = segmentDict["coordinates"] as? [[String: Any]],
-                  coordArray.count >= 2
-            else { continue }
+        for segment in segments {
+            guard segment.coordinates.count >= 2 else { continue }
 
-            let colorString = segmentDict["color"] as? String ?? ""
-            let color = ColorConverter.color(from: colorString)
+            let color = ColorConverter.color(from: segment.color)
 
-            var segCoordinates = coordArray.map { coord -> CLLocationCoordinate2D in
-                let lat = (coord["latitude"] as? Double) ?? (coord["latitude"] as? NSNumber)?.doubleValue ?? 0
-                let lon = (coord["longitude"] as? Double) ?? (coord["longitude"] as? NSNumber)?.doubleValue ?? 0
-                return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            var segCoordinates = segment.coordinates.map { coord in
+                CLLocationCoordinate2D(latitude: coord.latitude, longitude: coord.longitude)
             }
 
             let polyline = MKPolyline(coordinates: &segCoordinates, count: segCoordinates.count)
@@ -309,10 +307,10 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         if !routeOverlays.isEmpty {
             let rect = routeOverlays.reduce(MKMapRect.null) { $0.union($1.boundingMapRect) }
             let padding = UIEdgeInsets(
-                top: edgePadding?["top"] ?? 40,
-                left: edgePadding?["left"] ?? 40,
-                bottom: edgePadding?["bottom"] ?? 40,
-                right: edgePadding?["right"] ?? 40
+                top: edgePadding.top,
+                left: edgePadding.left,
+                bottom: edgePadding.bottom,
+                right: edgePadding.right
             )
             mapView.setVisibleMapRect(rect, edgePadding: padding, animated: true)
         }
