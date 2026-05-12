@@ -10,7 +10,7 @@ Expo module for integrating Apple CarPlay into React Native apps. Provides typed
 npm install @bradford-tech/expo-carplay
 ```
 
-Requires Expo SDK 55+ and iOS 15.0+.
+Requires Node 20+, Expo SDK 55+, and iOS 15.0+.
 
 ## Quick Start
 
