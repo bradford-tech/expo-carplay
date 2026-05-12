@@ -16,15 +16,15 @@ final class NavigationHandler {
 
     // MARK: - Session Lifecycle
 
-    func startNavigation(tripConfig: [String: Any]) -> String? {
+    /// Threading convention for this file: `await MainActor.run` when the call
+    /// needs to return a value to the awaiting AsyncFunction (as here);
+    /// `DispatchQueue.main.async` for fire-and-forget updates.
+    func startNavigation(tripConfig: [String: Any]) async -> String? {
         guard let trip = TripBuilder.build(from: tripConfig) else { return nil }
 
-        // Get the root map template from the template store
-        guard let mapTemplate = findMapTemplate() else { return nil }
+        return await MainActor.run { () -> String? in
+            guard let mapTemplate = findMapTemplate() else { return nil }
 
-        // Must dispatch to main thread — CPMapTemplate operations are UIKit
-        var sessionId: String?
-        DispatchQueue.main.sync {
             // End any existing session first — CPMapTemplate throws
             // clientTripAlreadyStartedException if a trip is already active.
             currentSession?.finishTrip()
@@ -35,9 +35,8 @@ final class NavigationHandler {
             session.pauseTrip(for: .loading, description: "Loading route...")
             self.currentSession = session
             self.currentTrip = trip
-            sessionId = UUID().uuidString
+            return UUID().uuidString
         }
-        return sessionId
     }
 
     func stopNavigation() {

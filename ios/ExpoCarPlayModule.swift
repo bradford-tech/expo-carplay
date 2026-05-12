@@ -68,8 +68,8 @@ public class ExpoCarPlayModule: Module {
             MapTemplateHandler.shared.clearRoute()
         }
 
-        AsyncFunction("startNavigation") { (tripConfig: [String: Any]) -> String in
-            guard let sessionId = NavigationHandler.shared.startNavigation(tripConfig: tripConfig) else {
+        AsyncFunction("startNavigation") { (tripConfig: [String: Any]) async throws -> String in
+            guard let sessionId = await NavigationHandler.shared.startNavigation(tripConfig: tripConfig) else {
                 throw NSError(
                     domain: "ExpoCarPlay",
                     code: 3,
