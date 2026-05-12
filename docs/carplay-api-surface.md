@@ -9,47 +9,46 @@
 |--------|--------|
 | **Kind** | `JS→Native` = call from JS · `Native→JS` = event/callback to JS · `Config` = property or data object · `Enum` = enumeration/option-set value |
 | **Nav?** | `Yes` = needed for navigation apps · `No` = not relevant · `Opt` = optional/useful but not required |
-| **Status** | `v1` = implemented and working · `stub` = handler scaffolded, not yet wired · blank = not started |
+| **Status** | `v1` = implemented and working · blank = not yet implemented |
 
 ---
 
 ## Implementation Status Summary
 
-> Last updated: 2026-04-06
+> Last updated: 2026-05-12
 
 | Category | Status | Notes |
 |----------|--------|-------|
 | **Expo Config Plugin** | v1 | Info.plist scene manifest, CarPlay entitlements, phone scene delegate bridge |
+| **Privacy Manifest** | v1 | `PrivacyInfo.xcprivacy` declares precise location for app functionality |
+| **Web stub** | v1 | `ExpoCarPlayModule.web.ts` resolves all methods to safe defaults with a one-time warning |
 | **Scene Lifecycle** | v1 | Connect/disconnect events, interface controller & window references |
-| **Interface Controller** | Partial | `setRootTemplate` only; push/pop/present/dismiss not yet exposed |
-| **Map Template** | v1 | Creation, map delegate, MKMapView with location tracking, route polylines |
-| **Navigation Session** | v1 | Start/stop, maneuver updates, travel estimate updates, pause/finish trip |
-| **Maneuvers** | Partial | `instructionVariants`, `symbolImage` (SF Symbols), `initialTravelEstimates` |
-| **Trip & Route Choice** | v1 | Origin/destination, route choice summary variants |
-| **Travel Estimates** | v1 | Distance remaining, time remaining |
-| **List Template** | Stub | Handler file exists, not wired to JS |
-| **Grid Template** | Stub | Handler file exists, not wired to JS |
-| **Search Template** | Stub | Handler file exists, not wired to JS |
-| **Tab Bar Template** | Stub | Handler file exists, not wired to JS |
-| **Information Template** | Stub | Handler file exists, not wired to JS |
-| **Voice Control Template** | Stub | Handler file exists, not wired to JS |
-| **Alerts & Action Sheets** | Stub | Handler file exists, not wired to JS |
-| **Session Configuration** | Stub | Handler file exists, not wired to JS |
+| **Interface Controller** | Partial | `setRootTemplate`, `pushTemplate`, `popTemplate`; `popToRoot`/`present`/`dismiss` not yet exposed |
+| **Map Template** | v1 | Creation, map delegate, MKMapView with location tracking, route polylines, bar/map buttons, runtime button updates |
+| **Navigation Session** | v1 | Start/stop, trip previews, maneuver updates, travel estimate updates, pause-on-load |
+| **Maneuvers** | Partial | `instructionVariants`, `symbolImage` (SF Symbols + URI), `initialTravelEstimates` |
+| **Trip & Route Choice** | v1 | Origin/destination (with `name`), route choice summary/additional info variants |
+| **Travel Estimates** | v1 | Distance remaining, time remaining, per-maneuver index |
+| **Search Template** | v1 | Create, search-text events, result selection, request-ID async pattern, search-button event |
+| **List Template** | — | Not started |
+| **Grid Template** | — | Not started |
+| **Tab Bar Template** | — | Not started |
+| **Information Template** | — | Not started |
+| **Voice Control Template** | — | Not started |
+| **Alerts & Action Sheets** | — | Not started |
+| **Session Configuration** | — | Not started |
 | **Contact Template** | — | Not started |
 | **Point of Interest** | — | Not started |
 | **Now Playing** | — | Not started |
 | **Dashboard & Instrument Cluster** | — | Not started |
 | **Multitouch (iOS 26+)** | — | Not started |
-| **Android Auto** | — | No Android implementation |
+| **Android Auto** | — | No Android implementation (CarPlay is Apple-only) |
 
 **JS Hooks:**
 
 | Hook | Status |
 |------|--------|
 | `useCarPlay()` | v1 — returns `{ connected: boolean }` |
-| `useMapTemplate()` | Stub |
-| `useNavigationSession()` | Stub |
-| `useSearchTemplate()` | Stub |
 
 ---
 
@@ -90,8 +89,8 @@ Manages the CarPlay connection lifecycle. When CarPlay connects, you receive a `
 | `templates` | CPInterfaceController | Config | Yes | |
 | `presentedTemplate` | CPInterfaceController | Config | Opt | |
 | `setRootTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | v1 |
-| `pushTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
-| `popTemplate(animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
+| `pushTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | v1 |
+| `popTemplate(animated:completion:)` | CPInterfaceController | JS→Native | Yes | v1 |
 | `popToRootTemplate(animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
 | `pop(to:animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
 | `presentTemplate(_:animated:completion:)` | CPInterfaceController | JS→Native | Yes | |
@@ -189,38 +188,38 @@ The map template is a control overlay for navigation apps' base map view. It pro
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `init(handler:)` | CPMapButton | JS→Native | Yes | |
-| `image` | CPMapButton | Config | Yes | |
+| `init(handler:)` | CPMapButton | JS→Native | Yes | v1 |
+| `image` | CPMapButton | Config | Yes | v1 |
 | `focusedImage` | CPMapButton | Config | Opt | |
-| `isEnabled` | CPMapButton | Config | Yes | |
-| `isHidden` | CPMapButton | Config | Yes | |
+| `isEnabled` | CPMapButton | Config | Yes | v1 |
+| `isHidden` | CPMapButton | Config | Yes | v1 |
 
 ### CPBarButton
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `init(image:handler:)` | CPBarButton | JS→Native | Yes | |
-| `init(title:handler:)` | CPBarButton | JS→Native | Yes | |
-| `isEnabled` | CPBarButton | Config | Yes | |
-| `image` | CPBarButton | Config | Yes | |
-| `title` | CPBarButton | Config | Yes | |
+| `init(image:handler:)` | CPBarButton | JS→Native | Yes | v1 |
+| `init(title:handler:)` | CPBarButton | JS→Native | Yes | v1 |
+| `isEnabled` | CPBarButton | Config | Yes | v1 |
+| `image` | CPBarButton | Config | Yes | v1 |
+| `title` | CPBarButton | Config | Yes | v1 |
 | `buttonType` | CPBarButton | Config | Yes | |
-| `buttonStyle` | CPBarButton | Config | Opt | |
+| `buttonStyle` | CPBarButton | Config | Opt | v1 |
 
 ### CPBarButtonProviding (protocol)
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
 | `backButton` | CPBarButtonProviding | Config | Yes | |
-| `leadingNavigationBarButtons` | CPBarButtonProviding | Config | Yes | |
-| `trailingNavigationBarButtons` | CPBarButtonProviding | Config | Yes | |
+| `leadingNavigationBarButtons` | CPBarButtonProviding | Config | Yes | v1 |
+| `trailingNavigationBarButtons` | CPBarButtonProviding | Config | Yes | v1 |
 
 ### CPBarButtonStyle (Enum)
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `.none` | CPBarButtonStyle | Enum | Yes | |
-| `.rounded` | CPBarButtonStyle | Enum | Yes | |
+| `.none` | CPBarButtonStyle | Enum | Yes | v1 |
+| `.rounded` | CPBarButtonStyle | Enum | Yes | v1 |
 
 ---
 
@@ -232,9 +231,9 @@ Manages the lifecycle of active navigation — from previewing trips to active t
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `showTripPreviews(_:textConfiguration:)` | CPMapTemplate | JS→Native | Yes | |
+| `showTripPreviews(_:textConfiguration:)` | CPMapTemplate | JS→Native | Yes | v1 |
 | `showTripPreviews(_:selectedTrip:textConfiguration:)` | CPMapTemplate | JS→Native | Yes | |
-| `hideTripPreviews()` | CPMapTemplate | JS→Native | Yes | |
+| `hideTripPreviews()` | CPMapTemplate | JS→Native | Yes | v1 |
 | `showRouteChoicesPreview(for:textConfiguration:)` | CPMapTemplate | JS→Native | Yes | |
 | `startNavigationSession(for:)` | CPMapTemplate | JS→Native | Yes | v1 |
 | `updateEstimates(_:for:)` | CPMapTemplate | JS→Native | Yes | v1 |
@@ -244,8 +243,8 @@ Manages the lifecycle of active navigation — from previewing trips to active t
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `mapTemplate(_:selectedPreviewFor:using:)` | CPMapTemplateDelegate | Native→JS | Yes | |
-| `mapTemplate(_:startedTrip:using:)` | CPMapTemplateDelegate | Native→JS | Yes | |
+| `mapTemplate(_:selectedPreviewFor:using:)` | CPMapTemplateDelegate | Native→JS | Yes | v1 |
+| `mapTemplate(_:startedTrip:using:)` | CPMapTemplateDelegate | Native→JS | Yes | v1 |
 | `mapTemplateDidCancelNavigation(_:)` | CPMapTemplateDelegate | Native→JS | Yes | |
 | `mapTemplateShouldProvideNavigationMetadata(_:)` | CPMapTemplateDelegate | Native→JS | Yes | |
 
@@ -693,15 +692,15 @@ Displays a keyboard, text field, and scrollable list of results. The app parses 
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `delegate` | CPSearchTemplate | Config | Yes | |
+| `delegate` | CPSearchTemplate | Config | Yes | v1 |
 
 ### CPSearchTemplateDelegate
 
 | Member | Parent Type | Kind | Nav? | Status |
 |--------|-------------|------|------|--------|
-| `searchTemplate(_:updatedSearchText:completionHandler:)` | CPSearchTemplateDelegate | Native→JS | Yes | |
-| `searchTemplate(_:selectedResult:completionHandler:)` | CPSearchTemplateDelegate | Native→JS | Yes | |
-| `searchTemplateSearchButtonPressed(_:)` | CPSearchTemplateDelegate | Native→JS | Yes | |
+| `searchTemplate(_:updatedSearchText:completionHandler:)` | CPSearchTemplateDelegate | Native→JS | Yes | v1 |
+| `searchTemplate(_:selectedResult:completionHandler:)` | CPSearchTemplateDelegate | Native→JS | Yes | v1 |
+| `searchTemplateSearchButtonPressed(_:)` | CPSearchTemplateDelegate | Native→JS | Yes | v1 |
 
 ---
 
