@@ -26,10 +26,7 @@ final class TemplateStore {
         templates[id]
     }
 
-    func remove(_ id: String) {
-        templates.removeValue(forKey: id)
-    }
-
+    /// Called only from `CarPlaySceneDelegate.templateApplicationScene(_:didDisconnect:from:)`.
     func clear() {
         templates.removeAll()
     }
