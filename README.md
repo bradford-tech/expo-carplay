@@ -134,14 +134,14 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | Maneuvers | Partial | `instructionVariants`, `symbolImage` (SF Symbols), `initialTravelEstimates` |
 | Trip & Route Choice | ● | Origin/destination, route choice summary variants |
 | Travel Estimates | ● | Distance remaining, time remaining |
-| List Template | ○ | Handler scaffolded, not wired to JS |
-| Grid Template | ○ | Handler scaffolded, not wired to JS |
+| List Template | ○ | Not started |
+| Grid Template | ○ | Not started |
 | Search Template | ● | Create, search text events, result selection, request ID pattern |
-| Tab Bar Template | ○ | Handler scaffolded, not wired to JS |
-| Information Template | ○ | Handler scaffolded, not wired to JS |
-| Voice Control Template | ○ | Handler scaffolded, not wired to JS |
-| Alerts & Action Sheets | ○ | Handler scaffolded, not wired to JS |
-| Session Configuration | ○ | Handler scaffolded, not wired to JS |
+| Tab Bar Template | ○ | Not started |
+| Information Template | ○ | Not started |
+| Voice Control Template | ○ | Not started |
+| Alerts & Action Sheets | ○ | Not started |
+| Session Configuration | ○ | Not started |
 | Contact Template | ○ | Not started |
 | Point of Interest | ○ | Not started |
 | Now Playing | ○ | Not started |
@@ -153,9 +153,6 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | Hook | Description | Status |
 | --- | --- | --- |
 | `useCarPlay()` | Returns `{ connected: boolean }` — reactive CarPlay connection state | ● |
-| `useMapTemplate()` | Map template lifecycle hook | ○ |
-| `useNavigationSession()` | Navigation session lifecycle hook | ○ |
-| `useSearchTemplate()` | Search template lifecycle hook | ○ |
 
 ### Scene Lifecycle & Interface Controller
 
