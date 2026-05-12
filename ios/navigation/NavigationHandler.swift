@@ -19,8 +19,9 @@ final class NavigationHandler {
     /// Threading convention for this file: `await MainActor.run` when the call
     /// needs to return a value to the awaiting AsyncFunction (as here);
     /// `DispatchQueue.main.async` for fire-and-forget updates.
-    func startNavigation(tripConfig: [String: Any]) async -> String? {
-        guard let trip = TripBuilder.build(from: tripConfig) else { return nil }
+    func startNavigation(tripConfig: TripConfig) async -> String? {
+        // Records validated the input; trip construction is now infallible.
+        let trip = TripBuilder.build(from: tripConfig)
 
         return await MainActor.run { () -> String? in
             guard let mapTemplate = findMapTemplate() else { return nil }
@@ -49,8 +50,9 @@ final class NavigationHandler {
 
     // MARK: - Trip Previews
 
-    func showTripPreviews(tripConfigs: [[String: Any]]) {
-        let trips = tripConfigs.compactMap { TripBuilder.build(from: $0) }
+    func showTripPreviews(tripConfigs: [TripConfig]) {
+        // TripBuilder.build is now infallible — `map` instead of `compactMap`.
+        let trips = tripConfigs.map { TripBuilder.build(from: $0) }
         guard !trips.isEmpty, let mapTemplate = findMapTemplate() else { return }
 
         previewedTrips = trips

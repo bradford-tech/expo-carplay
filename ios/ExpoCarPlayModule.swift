@@ -60,13 +60,9 @@ public class ExpoCarPlayModule: Module {
             MapTemplateHandler.shared.clearRoute()
         }
 
-        AsyncFunction("startNavigation") { (tripConfig: [String: Any]) async throws -> String in
+        AsyncFunction("startNavigation") { (tripConfig: TripConfig) async throws -> String in
             guard let sessionId = await NavigationHandler.shared.startNavigation(tripConfig: tripConfig) else {
-                throw NSError(
-                    domain: "ExpoCarPlay",
-                    code: 3,
-                    userInfo: [NSLocalizedDescriptionKey: "Failed to start navigation — invalid trip config or no map template"]
-                )
+                throw NoMapTemplateException()
             }
             return sessionId
         }
@@ -75,7 +71,7 @@ public class ExpoCarPlayModule: Module {
             NavigationHandler.shared.stopNavigation()
         }
 
-        AsyncFunction("showTripPreviews") { (trips: [[String: Any]]) in
+        AsyncFunction("showTripPreviews") { (trips: [TripConfig]) in
             NavigationHandler.shared.showTripPreviews(tripConfigs: trips)
         }
 

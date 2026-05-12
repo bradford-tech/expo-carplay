@@ -1,43 +1,37 @@
 // TripBuilder.swift
-// Constructs CPTrip and CPRouteChoice from JS config dictionaries.
+// Constructs CPTrip and CPRouteChoice from a typed TripConfig Record.
 // See: docs/carplay-api-surface.md §3 — CPTrip, CPRouteChoice
 
 import CarPlay
 import MapKit
 
 enum TripBuilder {
-    static func build(from config: [String: Any]) -> CPTrip? {
-        guard let originDict = config["origin"] as? [String: Any],
-              let destDict = config["destination"] as? [String: Any],
-              let routeChoicesArray = config["routeChoices"] as? [[String: Any]]
-        else { return nil }
+    static func build(from config: TripConfig) -> CPTrip {
+        let originItem = mapItem(for: config.origin, fallbackName: "Current Location")
+        let destItem = mapItem(for: config.destination, fallbackName: "Destination")
 
-        let originCoord = CLLocationCoordinate2D(
-            latitude: originDict["latitude"] as? Double ?? 0,
-            longitude: originDict["longitude"] as? Double ?? 0
-        )
-        let destCoord = CLLocationCoordinate2D(
-            latitude: destDict["latitude"] as? Double ?? 0,
-            longitude: destDict["longitude"] as? Double ?? 0
-        )
-
-        let originItem = MKMapItem(placemark: MKPlacemark(coordinate: originCoord))
-        originItem.name = (originDict["name"] as? String) ?? "Current Location"
-        let destItem = MKMapItem(placemark: MKPlacemark(coordinate: destCoord))
-        destItem.name = (destDict["name"] as? String) ?? "Destination"
-
-        let routeChoices = routeChoicesArray.compactMap { choiceDict -> CPRouteChoice? in
-            guard let summaryVariants = choiceDict["summaryVariants"] as? [String] else { return nil }
-            let additionalInfo = choiceDict["additionalInformationVariants"] as? [String] ?? []
+        let routeChoices = config.routeChoices.map { choice -> CPRouteChoice in
+            let additionalInfo = choice.additionalInformationVariants
             return CPRouteChoice(
-                summaryVariants: summaryVariants,
+                summaryVariants: choice.summaryVariants,
                 additionalInformationVariants: additionalInfo,
-                selectionSummaryVariants: additionalInfo.isEmpty ? summaryVariants : additionalInfo
+                // Derived: selection summary falls back to the main summary
+                // when no additional info is provided. Not a Record field
+                // since it's a function of the other two arrays.
+                selectionSummaryVariants: additionalInfo.isEmpty ? choice.summaryVariants : additionalInfo
             )
         }
 
-        guard !routeChoices.isEmpty else { return nil }
-
         return CPTrip(origin: originItem, destination: destItem, routeChoices: routeChoices)
+    }
+
+    /// Per-role name defaults stay in the converter because they're role-specific
+    /// (origin gets "Current Location", destination gets "Destination") and can't
+    /// be expressed as a single `TripPlace` Record default.
+    private static func mapItem(for place: TripPlace, fallbackName: String) -> MKMapItem {
+        let coord = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: coord))
+        item.name = place.name ?? fallbackName
+        return item
     }
 }
