@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.21...expo-carplay-v0.2.0) (2026-05-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* useMapTemplate, useNavigationSession, and useSearchTemplate are no longer exported.
+
+### Features
+
+* **ios:** add PrivacyInfo.xcprivacy ([60b6a5a](https://github.com/bradford-tech/expo-carplay/commit/60b6a5afbbd9c55d5f99905e6dc4d2c949ac5e47))
+* **web:** add web platform stub ([295ad6d](https://github.com/bradford-tech/expo-carplay/commit/295ad6db7cd783f26355bb449e21e92056aa8834))
+
+
+### Bug Fixes
+
+* **navigation:** replace main.sync with MainActor.run ([a275c7a](https://github.com/bradford-tech/expo-carplay/commit/a275c7a8d5a391039551114ad512d42a4a2231d8))
+* **scene:** drop TemplateStore.clear() side effect from setRootTemplate ([dcd88a1](https://github.com/bradford-tech/expo-carplay/commit/dcd88a1dce5cc45766b8201862543dfde7c4b8d4))
+
+
+### Code Refactoring
+
+* remove empty stub modules and hooks ([ee283e7](https://github.com/bradford-tech/expo-carplay/commit/ee283e725ac793e4aac9f66025e477d19ccf1aa2))
+
 ## [0.1.21](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.1.20...expo-carplay-v0.1.21) (2026-04-24)
 
 
