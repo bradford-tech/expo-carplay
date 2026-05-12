@@ -43,3 +43,6 @@ yarn-error.log
 # Expo
 .expo/*
 buildServer.json
+
+# TypeScript incremental build cache
+*.tsbuildinfo
