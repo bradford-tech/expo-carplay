@@ -30,3 +30,17 @@ struct Coordinate: Record {
     @Field(.required) var latitude: Double
     @Field(.required) var longitude: Double
 }
+
+/// ImageRef is the canonical shape for new image-input fields (Maneuver.symbolImage,
+/// future List/Grid item images, etc.). Existing string-shaped fields
+/// (BarButtonConfig.systemImage, MapButtonConfig.systemImage) are deliberately
+/// not migrated here — that's a separate breaking-change decision for later.
+///
+/// Pseudo-discriminator: converter prefers `systemName`, falls back to `uri`,
+/// drops the image silently if both are nil. No `.required` on either field
+/// individually — the discriminator allows either-or, and "no image" is a
+/// valid outcome.
+struct ImageRef: Record {
+    @Field var systemName: String?
+    @Field var uri: String?
+}
