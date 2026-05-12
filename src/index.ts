@@ -6,6 +6,8 @@ export * from './scene/scene';
 export * from './scene/scene.types';
 export { useCarPlay } from './scene/useCarPlay';
 
+export * from './shared/shared.types';
+
 export * from './map/map';
 export * from './map/map.types';
 
