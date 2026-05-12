@@ -36,18 +36,10 @@ public class ExpoCarPlayModule: Module {
 
         AsyncFunction("setRootTemplate") { (templateId: String) in
             guard let template = TemplateStore.shared.get(templateId) else {
-                throw NSError(
-                    domain: "ExpoCarPlay",
-                    code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Template not found: \(templateId)"]
-                )
+                throw TemplateNotFoundException(templateId)
             }
             guard let interfaceController = SceneSessionManager.shared.interfaceController else {
-                throw NSError(
-                    domain: "ExpoCarPlay",
-                    code: 2,
-                    userInfo: [NSLocalizedDescriptionKey: "CarPlay not connected"]
-                )
+                throw CarPlayNotConnectedException()
             }
             interfaceController.setRootTemplate(template, animated: true, completion: nil)
         }
@@ -113,18 +105,10 @@ public class ExpoCarPlayModule: Module {
 
         AsyncFunction("pushTemplate") { (templateId: String) in
             guard let template = TemplateStore.shared.get(templateId) else {
-                throw NSError(
-                    domain: "ExpoCarPlay",
-                    code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Template not found: \(templateId)"]
-                )
+                throw TemplateNotFoundException(templateId)
             }
             guard let interfaceController = SceneSessionManager.shared.interfaceController else {
-                throw NSError(
-                    domain: "ExpoCarPlay",
-                    code: 2,
-                    userInfo: [NSLocalizedDescriptionKey: "CarPlay not connected"]
-                )
+                throw CarPlayNotConnectedException()
             }
             DispatchQueue.main.async {
                 interfaceController.pushTemplate(template, animated: true, completion: nil)
