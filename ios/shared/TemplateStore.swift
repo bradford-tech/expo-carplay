@@ -1,6 +1,10 @@
 // TemplateStore.swift
 // Cross-cutting registry mapping JS string IDs to native CPTemplate instances.
-// Cleared on CarPlay disconnect and when setRootTemplate replaces the hierarchy.
+//
+// Lifecycle: templates live for the duration of a CarPlay session and are
+// freed in bulk when the scene disconnects. A typical session has at most a
+// few dozen templates, so per-template GC is unnecessary; clearing on
+// disconnect is the only required cleanup.
 
 import CarPlay
 import Foundation

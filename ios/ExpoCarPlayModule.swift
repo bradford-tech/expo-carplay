@@ -49,8 +49,6 @@ public class ExpoCarPlayModule: Module {
                     userInfo: [NSLocalizedDescriptionKey: "CarPlay not connected"]
                 )
             }
-            TemplateStore.shared.clear()
-            _ = TemplateStore.shared.store(template)
             interfaceController.setRootTemplate(template, animated: true, completion: nil)
         }
 
