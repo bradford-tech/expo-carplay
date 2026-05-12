@@ -16,6 +16,11 @@ import type {
   MapTemplateConfig,
   RouteSegment,
 } from './map/map.types';
+import type {
+  ManeuverConfig,
+  TravelEstimates,
+  TripConfig,
+} from './navigation/navigation.types';
 import type { SearchResultItem } from './search/search.types';
 
 let warned = false;
@@ -77,7 +82,7 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return Promise.resolve();
   },
-  startNavigation: (_tripConfig): Promise<string> => {
+  startNavigation: (_tripConfig: TripConfig): Promise<string> => {
     warn();
     return Promise.resolve('');
   },
@@ -85,7 +90,7 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return Promise.resolve();
   },
-  showTripPreviews: (_trips): Promise<void> => {
+  showTripPreviews: (_trips: TripConfig[]): Promise<void> => {
     warn();
     return Promise.resolve();
   },
@@ -93,12 +98,12 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return Promise.resolve();
   },
-  updateManeuvers: (_maneuvers): Promise<void> => {
+  updateManeuvers: (_maneuvers: ManeuverConfig[]): Promise<void> => {
     warn();
     return Promise.resolve();
   },
   updateTravelEstimates: (
-    _estimates,
+    _estimates: TravelEstimates,
     _maneuverIndex?: number
   ): Promise<void> => {
     warn();

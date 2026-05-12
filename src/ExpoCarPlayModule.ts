@@ -10,6 +10,11 @@ import type {
   MapTemplateConfig,
   RouteSegment,
 } from './map/map.types';
+import type {
+  ManeuverConfig,
+  TravelEstimates,
+  TripConfig,
+} from './navigation/navigation.types';
 import type { SearchResultItem } from './search/search.types';
 
 export type ExpoCarPlayModule = {
@@ -29,36 +34,14 @@ export type ExpoCarPlayModule = {
     edgePadding?: EdgePadding | null
   ): Promise<void>;
   clearCarPlayRoute(): Promise<void>;
-  startNavigation(tripConfig: {
-    origin: { latitude: number; longitude: number };
-    destination: { latitude: number; longitude: number };
-    routeChoices: {
-      summaryVariants: string[];
-      additionalInformationVariants?: string[];
-    }[];
-  }): Promise<string>;
+  startNavigation(tripConfig: TripConfig): Promise<string>;
   stopNavigation(): Promise<void>;
-  showTripPreviews(
-    trips: {
-      origin: { latitude: number; longitude: number };
-      destination: { latitude: number; longitude: number };
-      routeChoices: {
-        summaryVariants: string[];
-        additionalInformationVariants?: string[];
-      }[];
-    }[]
-  ): Promise<void>;
+  /** CarPlay shows up to 12 trip previews; additional entries are ignored. */
+  showTripPreviews(trips: TripConfig[]): Promise<void>;
   hideTripPreviews(): Promise<void>;
-  updateManeuvers(
-    maneuvers: {
-      instructionVariants: string[];
-      symbolImage?: { systemName: string } | { uri: string };
-      distanceRemaining?: number;
-      timeRemaining?: number;
-    }[]
-  ): Promise<void>;
+  updateManeuvers(maneuvers: ManeuverConfig[]): Promise<void>;
   updateTravelEstimates(
-    estimates: { distanceRemaining: number; timeRemaining: number },
+    estimates: TravelEstimates,
     maneuverIndex?: number
   ): Promise<void>;
   createSearchTemplate(): Promise<string>;

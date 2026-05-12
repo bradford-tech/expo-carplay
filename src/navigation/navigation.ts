@@ -41,6 +41,7 @@ export function getActiveSessionId(): string | null {
   return activeSessionId;
 }
 
+/** CarPlay shows up to 12 trip previews; additional entries are ignored. */
 export async function showTripPreviews(trips: TripConfig[]): Promise<void> {
   await ExpoCarPlay.showTripPreviews(trips);
 }
