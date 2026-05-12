@@ -127,6 +127,7 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | Category | Status | Notes |
 | --- | --- | --- |
 | Expo Config Plugin | ● | Info.plist scene manifest, CarPlay entitlements, phone scene delegate bridge |
+| Privacy Manifest | ● | `PrivacyInfo.xcprivacy` declares precise location for app functionality |
 | Scene Lifecycle | ● | Connect/disconnect events, interface controller & window references |
 | Interface Controller | Partial | `setRootTemplate`, `pushTemplate`, `popTemplate`; present/dismiss not yet exposed |
 | Map Template | ● | Creation with button config, map delegate, MKMapView with location tracking, route polylines |
