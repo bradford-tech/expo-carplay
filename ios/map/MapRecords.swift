@@ -8,7 +8,7 @@ struct MapTemplateConfig: Record {
     @Field var trailingNavigationBarButtons: [BarButtonConfig] = []
     @Field var mapButtons: [MapButtonConfig] = []
     @Field var automaticallyHidesNavigationBar: Bool = true
-    @Field var hidesButtonsWithNavigationBar: Bool = false
+    @Field var hidesButtonsWithNavigationBar: Bool = true
 }
 
 struct MapTemplateButtonsConfig: Record {
