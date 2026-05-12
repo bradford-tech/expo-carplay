@@ -78,7 +78,7 @@ final class NavigationHandler {
 
     // MARK: - Maneuver Updates
 
-    func updateManeuvers(configs: [[String: Any]]) {
+    func updateManeuvers(configs: [ManeuverConfig]) {
         let maneuvers = ManeuverBuilder.buildArray(from: configs)
         DispatchQueue.main.async { [self] in
             currentSession?.upcomingManeuvers = maneuvers

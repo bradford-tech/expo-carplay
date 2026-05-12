@@ -79,7 +79,7 @@ public class ExpoCarPlayModule: Module {
             NavigationHandler.shared.hideTripPreviews()
         }
 
-        AsyncFunction("updateManeuvers") { (maneuvers: [[String: Any]]) in
+        AsyncFunction("updateManeuvers") { (maneuvers: [ManeuverConfig]) in
             NavigationHandler.shared.updateManeuvers(configs: maneuvers)
         }
 

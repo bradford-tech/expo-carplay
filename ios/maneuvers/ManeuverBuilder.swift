@@ -1,59 +1,48 @@
 // ManeuverBuilder.swift
-// Constructs CPManeuver from JS config dictionaries.
-// Handles SF Symbol and URI image resolution, wraps in CPImageSet.
+// Constructs CPManeuver from a typed ManeuverConfig Record.
+// Handles SF Symbol / URI image resolution via the shared ImageRef pattern.
 // See: docs/carplay-api-surface.md §4 — Maneuvers & Lane Guidance
 
 import CarPlay
 
 enum ManeuverBuilder {
-    static func build(from config: [String: Any]) -> CPManeuver {
+    static func build(from config: ManeuverConfig) -> CPManeuver {
         let maneuver = CPManeuver()
+        maneuver.instructionVariants = config.instructionVariants
 
-        // Instruction variants (array of strings, longest first)
-        if let variants = config["instructionVariants"] as? [String] {
-            maneuver.instructionVariants = variants
-        }
-
-        // Symbol image — SF Symbol or URI
-        if let imageConfig = config["symbolImage"] as? [String: String] {
-            if let image = resolveImage(imageConfig) {
-                let imageSet = CPImageSet(
-                    lightContentImage: image,
-                    darkContentImage: image
-                )
-                maneuver.symbolSet = imageSet
-            }
-        }
-
-        // Initial travel estimates
-        let distanceMeters = config["distanceRemaining"] as? Double
-        let timeSeconds = config["timeRemaining"] as? Double
-        if let dist = distanceMeters, let time = timeSeconds {
-            maneuver.initialTravelEstimates = CPTravelEstimates(
-                distanceRemaining: UnitConversion.localizedDistance(meters: dist),
-                timeRemaining: time
+        // ImageRef pseudo-discriminator: prefer systemName, fall back to uri,
+        // drop if neither. Same pattern as MapButtonConfig.title vs systemImage.
+        if let imageRef = config.symbolImage,
+           let image = resolveImage(imageRef) {
+            maneuver.symbolSet = CPImageSet(
+                lightContentImage: image,
+                darkContentImage: image
             )
-        } else if let dist = distanceMeters {
+        }
+
+        // Initial travel estimates: set if a distance is provided; time
+        // defaults to 0 in that case (matches pre-pilot behavior).
+        if let dist = config.distanceRemaining {
             maneuver.initialTravelEstimates = CPTravelEstimates(
                 distanceRemaining: UnitConversion.localizedDistance(meters: dist),
-                timeRemaining: 0
+                timeRemaining: config.timeRemaining ?? 0
             )
         }
 
         return maneuver
     }
 
-    static func buildArray(from configs: [[String: Any]]) -> [CPManeuver] {
+    static func buildArray(from configs: [ManeuverConfig]) -> [CPManeuver] {
         configs.map { build(from: $0) }
     }
 
     // MARK: - Image Resolution
 
-    private static func resolveImage(_ config: [String: String]) -> UIImage? {
-        if let systemName = config["systemName"] {
+    private static func resolveImage(_ ref: ImageRef) -> UIImage? {
+        if let systemName = ref.systemName {
             return UIImage(systemName: systemName)
         }
-        if let uri = config["uri"] {
+        if let uri = ref.uri {
             // Handle file:// URIs
             let path = uri.hasPrefix("file://") ? String(uri.dropFirst(7)) : uri
             return UIImage(contentsOfFile: path)
