@@ -4,7 +4,7 @@
 
 import { type EventSubscription, requireNativeModule } from 'expo-modules-core';
 
-type ExpoCarPlayModule = {
+export type ExpoCarPlayModule = {
   addListener<T = void>(
     eventName: string,
     listener: (event: T) => void
