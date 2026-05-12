@@ -24,17 +24,14 @@ final class SearchTemplateHandler: NSObject, CPSearchTemplateDelegate {
         return TemplateStore.shared.store(template)
     }
 
-    func updateResults(requestId: String, items: [[String: String]]) {
+    func updateResults(requestId: String, items: [SearchResultItem]) {
         DispatchQueue.main.async { [self] in
             guard let completion = pendingCompletions.removeValue(forKey: requestId) else {
                 return // Stale request — silently ignore
             }
 
-            let listItems = items.map { item -> CPListItem in
-                CPListItem(
-                    text: item["text"] ?? "",
-                    detailText: item["detailText"]
-                )
+            let listItems = items.map { item in
+                CPListItem(text: item.text, detailText: item.detailText)
             }
 
             completion(listItems)

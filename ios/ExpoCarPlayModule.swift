@@ -107,7 +107,7 @@ public class ExpoCarPlayModule: Module {
             return SearchTemplateHandler.shared.create()
         }
 
-        AsyncFunction("updateSearchResults") { (requestId: String, items: [[String: String]]) in
+        AsyncFunction("updateSearchResults") { (requestId: String, items: [SearchResultItem]) in
             SearchTemplateHandler.shared.updateResults(requestId: requestId, items: items)
         }
 
