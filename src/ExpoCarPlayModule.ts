@@ -4,52 +4,29 @@
 
 import { type EventSubscription, requireNativeModule } from 'expo-modules-core';
 
+import type {
+  EdgePadding,
+  MapTemplateButtonsConfig,
+  MapTemplateConfig,
+  RouteSegment,
+} from './map/map.types';
+import type { SearchResultItem } from './search/search.types';
+
 export type ExpoCarPlayModule = {
   addListener<T = void>(
     eventName: string,
     listener: (event: T) => void
   ): EventSubscription;
-  createMapTemplate(config?: Record<string, unknown> | null): Promise<string>;
-  updateMapTemplateButtons(config: {
-    leadingNavigationBarButtons?: {
-      id: string;
-      title?: string;
-      systemImage?: string;
-      style?: 'none' | 'rounded';
-      enabled?: boolean;
-    }[];
-    trailingNavigationBarButtons?: {
-      id: string;
-      title?: string;
-      systemImage?: string;
-      style?: 'none' | 'rounded';
-      enabled?: boolean;
-    }[];
-    mapButtons?: {
-      id: string;
-      systemImage?: string;
-      title?: string;
-      backgroundColor?: string;
-      enabled?: boolean;
-      hidden?: boolean;
-    }[];
-  }): Promise<void>;
+  createMapTemplate(config?: MapTemplateConfig | null): Promise<string>;
+  updateMapTemplateButtons(config: MapTemplateButtonsConfig): Promise<void>;
   setRootTemplate(templateId: string): Promise<void>;
   pushTemplate(templateId: string): Promise<void>;
   popTemplate(): Promise<void>;
   startFollowingUser(): Promise<void>;
   stopFollowingUser(): Promise<void>;
   setCarPlayRoute(
-    segments: {
-      coordinates: { latitude: number; longitude: number }[];
-      color: string;
-    }[],
-    edgePadding?: {
-      top?: number;
-      left?: number;
-      bottom?: number;
-      right?: number;
-    } | null
+    segments: RouteSegment[],
+    edgePadding?: EdgePadding | null
   ): Promise<void>;
   clearCarPlayRoute(): Promise<void>;
   startNavigation(tripConfig: {
@@ -87,7 +64,7 @@ export type ExpoCarPlayModule = {
   createSearchTemplate(): Promise<string>;
   updateSearchResults(
     requestId: string,
-    items: { text: string; detailText?: string }[]
+    items: SearchResultItem[]
   ): Promise<void>;
 };
 

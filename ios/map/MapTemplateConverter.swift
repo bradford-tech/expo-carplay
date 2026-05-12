@@ -7,60 +7,53 @@
 import CarPlay
 
 enum MapTemplateConverter {
-    static func buildBarButtons(from configs: [[String: Any]]) -> [CPBarButton] {
+    static func buildBarButtons(from configs: [BarButtonConfig]) -> [CPBarButton] {
         configs.compactMap { config in
-            guard let id = config["id"] as? String else { return nil }
-
+            let id = config.id
             let handler: (CPBarButton) -> Void = { _ in
                 CarPlayEventEmitter.shared.emit("onBarButtonPressed", ["id": id])
             }
 
             let button: CPBarButton
-            if let systemImage = config["systemImage"] as? String,
+            if let systemImage = config.systemImage,
                let image = UIImage(systemName: systemImage) {
                 button = CPBarButton(image: image, handler: handler)
-            } else if let title = config["title"] as? String {
+            } else if let title = config.title {
                 button = CPBarButton(title: title, handler: handler)
             } else {
                 return nil
             }
 
-            if let styleString = config["style"] as? String, styleString == "rounded" {
+            // `.none` and `nil` both fall through here — CPBarButton's
+            // framework default is no style, which matches both cases.
+            if case .rounded = config.style {
                 button.buttonStyle = .rounded
             }
 
-            if let enabled = config["enabled"] as? Bool {
-                button.isEnabled = enabled
-            }
-
+            button.isEnabled = config.enabled
             return button
         }
     }
 
-    static func buildMapButtons(from configs: [[String: Any]]) -> [CPMapButton] {
+    static func buildMapButtons(from configs: [MapButtonConfig]) -> [CPMapButton] {
         configs.compactMap { config in
-            guard let id = config["id"] as? String else { return nil }
-
+            let id = config.id
             let button = CPMapButton { _ in
                 CarPlayEventEmitter.shared.emit("onMapButtonPressed", ["id": id])
             }
 
-            if let title = config["title"] as? String {
-                // Render a pill-shaped image with text and optional background color
-                let bgColor = (config["backgroundColor"] as? String).flatMap { ColorConverter.color(from: $0) } ?? .systemBlue
+            // title vs systemImage is two optional fields with a prefer-one fallback;
+            // not a discriminated union. When the Navigation pilot models
+            // ManeuverConfig.symbolImage, that's where the EitherType convention lands.
+            if let title = config.title {
+                let bgColor = config.backgroundColor.flatMap { ColorConverter.color(from: $0) } ?? .systemBlue
                 button.image = renderPillImage(title: title, backgroundColor: bgColor)
-            } else if let systemImage = config["systemImage"] as? String {
+            } else if let systemImage = config.systemImage {
                 button.image = UIImage(systemName: systemImage)
             }
 
-            if let enabled = config["enabled"] as? Bool {
-                button.isEnabled = enabled
-            }
-
-            if let hidden = config["hidden"] as? Bool {
-                button.isHidden = hidden
-            }
-
+            button.isEnabled = config.enabled
+            button.isHidden = config.hidden
             return button
         }
     }

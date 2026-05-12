@@ -6,9 +6,8 @@ import type { EventSubscription } from 'expo-modules-core';
 
 import ExpoCarPlay from '../ExpoCarPlayModule';
 import type {
-  BarButtonConfig,
   EdgePadding,
-  MapButtonConfig,
+  MapTemplateButtonsConfig,
   MapTemplateConfig,
   RouteSegment,
 } from './map.types';
@@ -38,11 +37,9 @@ export async function clearCarPlayRoute(): Promise<void> {
   await ExpoCarPlay.clearCarPlayRoute();
 }
 
-export async function updateMapTemplateButtons(config: {
-  leadingNavigationBarButtons?: BarButtonConfig[];
-  trailingNavigationBarButtons?: BarButtonConfig[];
-  mapButtons?: MapButtonConfig[];
-}): Promise<void> {
+export async function updateMapTemplateButtons(
+  config: MapTemplateButtonsConfig
+): Promise<void> {
   await ExpoCarPlay.updateMapTemplateButtons(config);
 }
 

@@ -26,11 +26,11 @@ public class ExpoCarPlayModule: Module {
             "onTripStarted"
         )
 
-        AsyncFunction("createMapTemplate") { (config: [String: Any]?) -> String in
+        AsyncFunction("createMapTemplate") { (config: MapTemplateConfig?) -> String in
             return MapTemplateHandler.shared.create(config: config)
         }
 
-        AsyncFunction("updateMapTemplateButtons") { (config: [String: Any]) in
+        AsyncFunction("updateMapTemplateButtons") { (config: MapTemplateButtonsConfig) in
             MapTemplateHandler.shared.updateButtons(config: config)
         }
 

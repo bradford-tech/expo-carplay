@@ -10,6 +10,13 @@
 import type { EventSubscription } from 'expo-modules-core';
 
 import type { ExpoCarPlayModule } from './ExpoCarPlayModule';
+import type {
+  EdgePadding,
+  MapTemplateButtonsConfig,
+  MapTemplateConfig,
+  RouteSegment,
+} from './map/map.types';
+import type { SearchResultItem } from './search/search.types';
 
 let warned = false;
 function warn(): void {
@@ -29,13 +36,13 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return noopSubscription;
   },
-  createMapTemplate: (
-    _config?: Record<string, unknown> | null
-  ): Promise<string> => {
+  createMapTemplate: (_config?: MapTemplateConfig | null): Promise<string> => {
     warn();
     return Promise.resolve('');
   },
-  updateMapTemplateButtons: (_config): Promise<void> => {
+  updateMapTemplateButtons: (
+    _config: MapTemplateButtonsConfig
+  ): Promise<void> => {
     warn();
     return Promise.resolve();
   },
@@ -59,7 +66,10 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return Promise.resolve();
   },
-  setCarPlayRoute: (_segments, _edgePadding): Promise<void> => {
+  setCarPlayRoute: (
+    _segments: RouteSegment[],
+    _edgePadding?: EdgePadding | null
+  ): Promise<void> => {
     warn();
     return Promise.resolve();
   },
@@ -98,7 +108,10 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return Promise.resolve('');
   },
-  updateSearchResults: (_requestId: string, _items): Promise<void> => {
+  updateSearchResults: (
+    _requestId: string,
+    _items: SearchResultItem[]
+  ): Promise<void> => {
     warn();
     return Promise.resolve();
   },
