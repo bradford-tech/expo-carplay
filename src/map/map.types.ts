@@ -34,15 +34,21 @@ export type EdgePadding = {
 };
 
 export type MapTemplateConfig = {
+  /** CarPlay shows up to 2 leading bar buttons; additional entries are ignored. */
   leadingNavigationBarButtons?: BarButtonConfig[];
+  /** CarPlay shows up to 2 trailing bar buttons; additional entries are ignored. */
   trailingNavigationBarButtons?: BarButtonConfig[];
+  /** CarPlay shows up to 3 map buttons; additional entries are ignored. */
   mapButtons?: MapButtonConfig[];
   automaticallyHidesNavigationBar?: boolean;
   hidesButtonsWithNavigationBar?: boolean;
 };
 
 export type MapTemplateButtonsConfig = {
+  /** CarPlay shows up to 2 leading bar buttons; additional entries are ignored. */
   leadingNavigationBarButtons?: BarButtonConfig[];
+  /** CarPlay shows up to 2 trailing bar buttons; additional entries are ignored. */
   trailingNavigationBarButtons?: BarButtonConfig[];
+  /** CarPlay shows up to 3 map buttons; additional entries are ignored. */
   mapButtons?: MapButtonConfig[];
 };
