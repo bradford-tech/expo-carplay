@@ -87,14 +87,10 @@ final class NavigationHandler {
 
     // MARK: - Travel Estimate Updates
 
-    func updateTravelEstimates(
-        distanceRemaining: Double,
-        timeRemaining: Double,
-        maneuverIndex: Int?
-    ) {
-        let estimates = CPTravelEstimates(
-            distanceRemaining: UnitConversion.localizedDistance(meters: distanceRemaining),
-            timeRemaining: timeRemaining
+    func updateTravelEstimates(estimates: TravelEstimates, maneuverIndex: Int?) {
+        let cpEstimates = CPTravelEstimates(
+            distanceRemaining: UnitConversion.localizedDistance(meters: estimates.distanceRemaining),
+            timeRemaining: estimates.timeRemaining
         )
 
         DispatchQueue.main.async { [self] in
@@ -103,12 +99,12 @@ final class NavigationHandler {
                let session = currentSession,
                idx < session.upcomingManeuvers.count {
                 let maneuver = session.upcomingManeuvers[idx]
-                session.updateEstimates(estimates, for: maneuver)
+                session.updateEstimates(cpEstimates, for: maneuver)
             }
 
             // Always update trip-level estimate
             if let trip = currentTrip, let mapTemplate = findMapTemplate() {
-                mapTemplate.updateEstimates(estimates, for: trip)
+                mapTemplate.updateEstimates(cpEstimates, for: trip)
             }
         }
     }

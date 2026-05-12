@@ -83,12 +83,8 @@ public class ExpoCarPlayModule: Module {
             NavigationHandler.shared.updateManeuvers(configs: maneuvers)
         }
 
-        AsyncFunction("updateTravelEstimates") { (estimates: [String: Double], maneuverIndex: Int?) in
-            NavigationHandler.shared.updateTravelEstimates(
-                distanceRemaining: estimates["distanceRemaining"] ?? 0,
-                timeRemaining: estimates["timeRemaining"] ?? 0,
-                maneuverIndex: maneuverIndex
-            )
+        AsyncFunction("updateTravelEstimates") { (estimates: TravelEstimates, maneuverIndex: Int?) in
+            NavigationHandler.shared.updateTravelEstimates(estimates: estimates, maneuverIndex: maneuverIndex)
         }
 
         AsyncFunction("createSearchTemplate") { () -> String in
