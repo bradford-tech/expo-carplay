@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.2](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.2.1...expo-carplay-v0.2.2) (2026-05-12)
+
+
+### Features
+
+* **navigation:** add typed Records for trip, route, maneuver, estimates ([e3245d4](https://github.com/bradford-tech/expo-carplay/commit/e3245d4dd8b767f44dbecbf1baa89f52aa80882e))
+* **navigation:** tighten TS bridge, types, and web stub ([57539ef](https://github.com/bradford-tech/expo-carplay/commit/57539efd014ca63a813517ac319de11dbf54debc))
+* **shared:** add ImageRef and NoMapTemplateException ([0c16edc](https://github.com/bradford-tech/expo-carplay/commit/0c16edc44b732aa102ff3f9c1efd6e15e14097fc))
+
 ## [0.2.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.2.0...expo-carplay-v0.2.1) (2026-05-12)
 
 
