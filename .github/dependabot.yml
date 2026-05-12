@@ -29,6 +29,17 @@ updates:
     cooldown:
       default-days: 7
       semver-major-days: 14
+    # The packages below are owned by .github/workflows/expo-upgrade.yml.
+    # When adding a new Expo/RN direct dep, update both this list and the
+    # mirror step in that workflow so neither system loses coverage.
+    ignore:
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "react"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native/*"
     groups:
       dev-dependencies:
         dependency-type: development
