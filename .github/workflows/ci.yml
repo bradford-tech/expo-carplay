@@ -19,6 +19,16 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Verify lockfiles match package.json
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          npm install --package-lock-only --ignore-scripts --prefix example
+          if ! git diff --exit-code -- package-lock.json example/package-lock.json; then
+            echo "::error::Lockfile drift detected. Run 'npm install' at the repo root and in example/, then commit the updated lockfiles."
+            exit 1
+          fi
+
       - run: npx expo-module lint src/
       - run: npx tsc --noEmit
       - run: npx expo-module build
