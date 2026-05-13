@@ -33,8 +33,10 @@ jobs:
         if: ${{ steps.release.outputs.pr }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
-        run: gh pr edit "$PR_NUMBER" --add-assignee sbs44
+          PR_JSON: ${{ steps.release.outputs.pr }}
+        run: |
+          PR_NUMBER=$(jq -r .number <<<"$PR_JSON")
+          gh pr edit "$PR_NUMBER" --add-assignee sbs44
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         if: ${{ steps.release.outputs.release_created }}
