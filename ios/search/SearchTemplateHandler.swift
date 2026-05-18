@@ -7,12 +7,10 @@ import CarPlay
 import Foundation
 
 final class SearchTemplateHandler: NSObject, CPSearchTemplateDelegate {
-    static let shared = SearchTemplateHandler()
-
     private var pendingCompletions: [String: ([CPListItem]) -> Void] = [:]
     private var currentRequestId: String?
 
-    override private init() {
+    override init() {
         super.init()
     }
 
@@ -79,15 +77,5 @@ final class SearchTemplateHandler: NSObject, CPSearchTemplateDelegate {
 
     func searchTemplateSearchButtonPressed(_: CPSearchTemplate) {
         CarPlayEventEmitter.shared.emit("onSearchButtonPressed", [:])
-    }
-
-    // MARK: - Cleanup
-
-    func cancelAllPending() {
-        for (_, completion) in pendingCompletions {
-            completion([])
-        }
-        pendingCompletions.removeAll()
-        currentRequestId = nil
     }
 }

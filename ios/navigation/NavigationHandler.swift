@@ -1,18 +1,22 @@
 // NavigationHandler.swift
 // Manages CPNavigationSession lifecycle — start, stop, update maneuvers and estimates.
 // Stores references to the active session and trip for estimate updates.
+// Init-injected per Phase D1's DI rework (no more *.shared).
 // See: docs/carplay-api-surface.md §3 — Navigation Session & Route Guidance
+//      docs/superpowers/specs/2026-05-16-di-rework-design.md
 
 import CarPlay
 
 final class NavigationHandler {
-    static let shared = NavigationHandler()
+    private let interfaceController: CPInterfaceController
 
     private var currentSession: CPNavigationSession?
     private var currentTrip: CPTrip?
     private(set) var previewedTrips: [CPTrip] = []
 
-    private init() {}
+    init(interfaceController: CPInterfaceController) {
+        self.interfaceController = interfaceController
+    }
 
     // MARK: - Session Lifecycle
 
@@ -112,9 +116,6 @@ final class NavigationHandler {
     // MARK: - Helpers
 
     private func findMapTemplate() -> CPMapTemplate? {
-        guard let interfaceController = SceneSessionManager.shared.interfaceController,
-              let mapTemplate = interfaceController.rootTemplate as? CPMapTemplate
-        else { return nil }
-        return mapTemplate
+        interfaceController.rootTemplate as? CPMapTemplate
     }
 }

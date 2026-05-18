@@ -1,14 +1,25 @@
 // MapTemplateHandler.swift
 // Creates CPMapTemplate instances and stores them in TemplateStore.
 // Forwards map control calls to CarPlayMapViewController.
+// Init-injected per Phase D1's DI rework (no more *.shared).
 // See: docs/carplay-api-surface.md §2 — Map Template & Map Buttons
+//      docs/superpowers/specs/2026-05-16-di-rework-design.md
 
 import CarPlay
 
 final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
-    static let shared = MapTemplateHandler()
+    private let interfaceController: CPInterfaceController
+    private let mapViewController: CarPlayMapViewController
+    private let navigationHandler: NavigationHandler
 
-    override private init() {
+    init(
+        interfaceController: CPInterfaceController,
+        mapViewController: CarPlayMapViewController,
+        navigationHandler: NavigationHandler
+    ) {
+        self.interfaceController = interfaceController
+        self.mapViewController = mapViewController
+        self.navigationHandler = navigationHandler
         super.init()
     }
 
@@ -29,9 +40,7 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
     }
 
     func updateButtons(config: MapTemplateButtonsConfig) {
-        guard let interfaceController = SceneSessionManager.shared.interfaceController,
-              let mapTemplate = interfaceController.rootTemplate as? CPMapTemplate
-        else { return }
+        guard let mapTemplate = interfaceController.rootTemplate as? CPMapTemplate else { return }
 
         DispatchQueue.main.async {
             // Optional arrays: nil = leave alone, empty = clear that group.
@@ -57,7 +66,7 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
     }
 
     func mapTemplate(_: CPMapTemplate, selectedPreviewFor trip: CPTrip, using routeChoice: CPRouteChoice) {
-        guard let tripIndex = NavigationHandler.shared.tripIndex(for: trip) else { return }
+        guard let tripIndex = navigationHandler.tripIndex(for: trip) else { return }
         let routeIndex = trip.routeChoices.firstIndex(of: routeChoice) ?? 0
         CarPlayEventEmitter.shared.emit("onTripPreviewSelected", [
             "tripIndex": tripIndex,
@@ -66,7 +75,7 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
     }
 
     func mapTemplate(_: CPMapTemplate, startedTrip trip: CPTrip, using routeChoice: CPRouteChoice) {
-        guard let tripIndex = NavigationHandler.shared.tripIndex(for: trip) else { return }
+        guard let tripIndex = navigationHandler.tripIndex(for: trip) else { return }
         let routeIndex = trip.routeChoices.firstIndex(of: routeChoice) ?? 0
         CarPlayEventEmitter.shared.emit("onTripStarted", [
             "tripIndex": tripIndex,
@@ -74,25 +83,21 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         ])
     }
 
-    // MARK: - Map VC Access
-
-    private var mapViewController: CarPlayMapViewController? {
-        SceneSessionManager.shared.carWindow?.rootViewController as? CarPlayMapViewController
-    }
+    // MARK: - Map VC Forwarding
 
     func startFollowingUser() {
-        mapViewController?.startFollowingUser()
+        mapViewController.startFollowingUser()
     }
 
     func stopFollowingUser() {
-        mapViewController?.stopFollowingUser()
+        mapViewController.stopFollowingUser()
     }
 
     func setRoute(segments: [RouteSegment], edgePadding: EdgePadding?) {
-        mapViewController?.setRoute(segments: segments, edgePadding: edgePadding)
+        mapViewController.setRoute(segments: segments, edgePadding: edgePadding)
     }
 
     func clearRoute() {
-        mapViewController?.clearRoute()
+        mapViewController.clearRoute()
     }
 }
