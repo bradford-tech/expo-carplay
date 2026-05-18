@@ -68,7 +68,6 @@ private func findClosestSegment(
 
 private let kSnapOffThreshold: CLLocationDistance = 15.0
 private let kSnapOnThreshold: CLLocationDistance = 8.0
-private let kFullScanMovementThreshold: CLLocationDistance = 50.0
 private let kWindowRadius = 10
 private let kAnimationDuration: TimeInterval = 1.0
 
@@ -93,8 +92,6 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     private var routePointCount: Int = 0
     private var routeActive: Bool = false
     private var lastMatchedIndex: Int = 0
-    private var lastMatchedGPS: CLLocationCoordinate2D = kCLLocationCoordinate2DInvalid
-    private var lastKnownBearing: CLLocationDirection = 0
     private var routeOverlays: [MKPolyline] = []
     private var overlayColors: [MKPolyline: UIColor] = [:]
     private var routeAnnotations: [MKPointAnnotation] = []
@@ -326,14 +323,6 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         // Activate route-derived heading
         routeActive = true
         lastMatchedIndex = 0
-        lastMatchedGPS = kCLLocationCoordinate2DInvalid
-
-        // Initialize bearing from first segment
-        if routePointCount >= 2 {
-            let start = routeMapPoints![0].coordinate
-            let end = routeMapPoints![1].coordinate
-            lastKnownBearing = bearing(from: start, to: end)
-        }
 
         // Zoom to fit the route polyline. Padding is configurable from JS —
         // callers can adjust for UI overlays (e.g., route choice panel).
@@ -376,8 +365,6 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         routePointCount = 0
         routeActive = false
         lastMatchedIndex = 0
-        lastMatchedGPS = kCLLocationCoordinate2DInvalid
-        lastKnownBearing = 0
     }
 
     // MARK: - MKMapViewDelegate
