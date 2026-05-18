@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.1...expo-carplay-v0.3.2) (2026-05-18)
+
+
+### Bug Fixes
+
+* **map:** use flat overhead camera when following without an active route ([658e47a](https://github.com/bradford-tech/expo-carplay/commit/658e47a5230885983292fb16d8359c14ca2f5f08))
+
 ## [0.3.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.0...expo-carplay-v0.3.1) (2026-05-18)
 
 
