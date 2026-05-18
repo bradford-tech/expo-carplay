@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@bradford-tech/expo-carplay": "file:..",
-    "expo": "~55.0.23",
+    "expo": "~55.0.24",
     "react": "19.2.0",
     "react-native": "0.83.6",
     "react-native-maps": "^1.27.2",
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/react": "~19.2.10",
     "eslint": "^9.39.4",
-    "eslint-config-expo": "^55.0.0",
+    "eslint-config-expo": "~55.0.1",
     "globals": "^17.4.0",
     "patch-package": "^8.0.1",
     "prettier": "3.5.3",
