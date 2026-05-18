@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.2.2...expo-carplay-v0.3.0) (2026-05-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **scene:** pre-connect template creation no longer works. createMapTemplate({}), setCarPlayRoute(...), and other handler-touching calls now reject the promise before a CarPlay scene connects. Consumers should gate on useCarPlay()'s connection state.
+
+### Features
+
+* **scene:** guard handler AsyncFunctions on connected scene ([3b258e7](https://github.com/bradford-tech/expo-carplay/commit/3b258e73b74b7885d82d09f597ce890e151003d5))
+
+
+### Bug Fixes
+
+* **release:** parse release PR JSON in shell to skip on publish runs ([55cd5c5](https://github.com/bradford-tech/expo-carplay/commit/55cd5c5955b3a9c272fe040ac551c16135adee19))
+* **release:** set GH_REPO so gh works without checkout ([d470d6c](https://github.com/bradford-tech/expo-carplay/commit/d470d6c6d7ca0a9a4ca0ce194e4a021fdcbf046e))
+
 ## [0.2.2](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.2.1...expo-carplay-v0.2.2) (2026-05-12)
 
 
