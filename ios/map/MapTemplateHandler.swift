@@ -58,9 +58,10 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
 
     // MARK: - CPMapTemplateDelegate
 
-    /// Required by iOS 26.4+ — CarPlayTemplateUIHost calls this during
-    /// _updateShareButtonVisibility without checking respondsToSelector:.
-    /// Returning false prevents the share button from being configured.
+    /// Opt out of route sharing — we don't donate route metadata to the vehicle.
+    /// (The iOS 26.4/26.5 share-button crash is handled by ios/shared/CPSCompat.m,
+    /// not this method; disassembly shows _updateShareButtonVisibility never
+    /// queries the mapDelegate.)
     func mapTemplateShouldProvideRouteSharing(_: CPMapTemplate) -> Bool {
         false
     }
