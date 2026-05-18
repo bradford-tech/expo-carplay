@@ -13,6 +13,10 @@ import type {
 
 let activeSessionId: string | null = null;
 
+ExpoCarPlay.addListener('onDisconnect', () => {
+  activeSessionId = null;
+});
+
 export async function startNavigation(trip: TripConfig): Promise<string> {
   const sessionId = await ExpoCarPlay.startNavigation(trip);
   activeSessionId = sessionId;
