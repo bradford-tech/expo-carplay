@@ -70,9 +70,17 @@ private let kSnapOffThreshold: CLLocationDistance = 15.0
 private let kSnapOnThreshold: CLLocationDistance = 8.0
 private let kFullScanMovementThreshold: CLLocationDistance = 50.0
 private let kWindowRadius = 10
-private let kCameraPitch: CGFloat = 60
-private let kCameraDistance: CLLocationDistance = 500
 private let kAnimationDuration: TimeInterval = 1.0
+
+// Route-active camera: tilted, close-in, oriented to the current route segment.
+private let kRouteCameraPitch: CGFloat = 60
+private let kRouteCameraDistance: CLLocationDistance = 500
+
+// Idle camera (no active route): flat, north-up, zoomed out enough to show
+// nearby streets without the navigation-style tilt.
+private let kIdleCameraPitch: CGFloat = 0
+private let kIdleCameraDistance: CLLocationDistance = 1500
+private let kIdleCameraHeading: CLLocationDirection = 0
 
 // MARK: - CarPlayMapViewController
 
@@ -129,7 +137,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
             // Center the map on the user when no route is active.
             // userTrackingMode = .follow doesn't reliably center the CarPlay
-            // map, so we center explicitly via setRegion — either immediately
+            // map, so we set the idle camera explicitly — either immediately
             // from the already-known userLocation, or on the next
             // mapView(_:didUpdate:) callback.
             if !routeActive {
@@ -164,12 +172,17 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     private func _centerOnUserLocation(_ coordinate: CLLocationCoordinate2D) {
         needsInitialCenter = false
-        let region = MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 1000,
-            longitudinalMeters: 1000
+        // Use the same idle-camera shape as `_updateCamera`'s idle branch so
+        // the initial center and subsequent GPS-driven updates use a single
+        // source of truth — no setRegion-then-setCamera mismatch on first
+        // follow.
+        let camera = MKMapCamera(
+            lookingAtCenter: coordinate,
+            fromDistance: kIdleCameraDistance,
+            pitch: kIdleCameraPitch,
+            heading: kIdleCameraHeading
         )
-        mapView.setRegion(region, animated: true)
+        mapView.setCamera(camera, animated: true)
     }
 
     // MARK: - CLLocationManagerDelegate
@@ -186,11 +199,31 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     // MARK: - Camera Update (called from native CLLocationManager, always on main thread)
 
     private func _updateCamera(coordinate coord: CLLocationCoordinate2D, course: CLLocationDirection) {
+        // Idle following (no route): flat overhead, north-up, recenter only.
+        // No heading rotation since the user isn't navigating a route.
+        guard routeActive else {
+            let idleCamera = MKMapCamera(
+                lookingAtCenter: coord,
+                fromDistance: kIdleCameraDistance,
+                pitch: kIdleCameraPitch,
+                heading: kIdleCameraHeading
+            )
+            UIView.animate(
+                withDuration: kAnimationDuration,
+                delay: 0,
+                options: [.curveLinear, .beginFromCurrentState],
+                animations: {
+                    self.mapView.camera = idleCamera
+                }
+            )
+            return
+        }
+
         let currentHeading = mapView.camera.heading
 
         // Determine target heading: route-derived if available, otherwise GPS course
         var targetHeading = course
-        if routeActive, let polyline = routeMapPoints, routePointCount > 1 {
+        if let polyline = routeMapPoints, routePointCount > 1 {
             let userPoint = MKMapPoint(coord)
             let windowStart = lastMatchedIndex - kWindowRadius
             let windowEnd = lastMatchedIndex + kWindowRadius
@@ -238,8 +271,8 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         // Animated camera transition
         let navCamera = MKMapCamera(
             lookingAtCenter: coord,
-            fromDistance: kCameraDistance,
-            pitch: kCameraPitch,
+            fromDistance: kRouteCameraDistance,
+            pitch: kRouteCameraPitch,
             heading: heading
         )
 
