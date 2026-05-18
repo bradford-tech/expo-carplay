@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.0...expo-carplay-v0.3.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* **map:** prevent share-button crash on iOS 26.4/26.5 ([7ce1427](https://github.com/bradford-tech/expo-carplay/commit/7ce1427006657ffd9d4885f73bff7886cc0f0e84))
+
 ## [0.3.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.2.2...expo-carplay-v0.3.0) (2026-05-18)
 
 
