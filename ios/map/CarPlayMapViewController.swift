@@ -11,6 +11,7 @@
 
 import CoreLocation
 import MapKit
+import os.log
 import UIKit
 
 // MARK: - Route Projection Math
@@ -127,7 +128,27 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String] ?? []
         if backgroundModes.contains("location") {
             locationManager.allowsBackgroundLocationUpdates = true
+        } else {
+            // Skipping silently would degrade to "camera freezes when the
+            // phone locks" with nothing pointing at the cause.
+            Self.warnOnce(
+                flag: &Self.didWarnMissingBackgroundMode,
+                message: "UIBackgroundModes does not include 'location' — CarPlay camera "
+                    + "updates will suspend when the phone locks. Add the 'location' "
+                    + "background mode to the host app's Info.plist to enable background updates."
+            )
         }
+    }
+
+    // MARK: - One-time diagnostics
+
+    private static var didWarnMissingBackgroundMode = false
+    private static var didWarnAuthorizationDenied = false
+
+    private static func warnOnce(flag: inout Bool, message: String) {
+        guard !flag else { return }
+        flag = true
+        os_log(.error, "expo-carplay: %{public}@", message)
     }
 
     override func viewDidLayoutSubviews() {
@@ -207,8 +228,17 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         _updateCamera(coordinate: location.coordinate, course: location.course)
     }
 
-    func locationManager(_: CLLocationManager, didFailWithError _: Error) {
-        // Location errors are expected in the simulator — ignore silently
+    func locationManager(_: CLLocationManager, didFailWithError error: Error) {
+        // Location errors are routine in the simulator; denial is the one
+        // worth surfacing — with background updates handled above, it is the
+        // likeliest remaining cause of a camera that never follows.
+        if (error as? CLError)?.code == .denied {
+            Self.warnOnce(
+                flag: &Self.didWarnAuthorizationDenied,
+                message: "location authorization denied — the CarPlay camera cannot follow "
+                    + "the user until the host app is granted location access."
+            )
+        }
     }
 
     // MARK: - Camera Update (called from native CLLocationManager, always on main thread)

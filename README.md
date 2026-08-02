@@ -116,6 +116,22 @@ The module includes an Expo config plugin that automatically configures your iOS
 
 No manual Xcode configuration needed — just install and run `npx expo prebuild`.
 
+### Background location (recommended)
+
+The CarPlay map's follow camera is driven by a native `CLLocationManager`. In
+the normal CarPlay case the phone is locked or pocketed, so unless the host
+app declares the `location` background mode, iOS may suspend location updates
+and freeze the camera:
+
+```js
+// app.json / app.config.js
+"ios": { "infoPlist": { "UIBackgroundModes": ["location"] } }
+```
+
+The module only enables background location updates when this mode is present
+(setting the flag without it is a fatal iOS error). Without it, a one-time
+warning is logged and the camera follows only while the phone is unlocked.
+
 ## API Surface
 
 The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from JavaScript/TypeScript. The tables below show every feature area and its implementation status.
