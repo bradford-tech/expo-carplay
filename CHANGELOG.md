@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.3](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.2...expo-carplay-v0.3.3) (2026-08-02)
+
+
+### Features
+
+* **scene:** seed the isConnected latch from a native connection query ([adf6c5c](https://github.com/bradford-tech/expo-carplay/commit/adf6c5cb55889d4d475192be3d2ba1279b05c553))
+
+
+### Bug Fixes
+
+* **map:** keep location updates alive when the phone is backgrounded ([881d1e3](https://github.com/bradford-tech/expo-carplay/commit/881d1e3181da45f950e449ba55c1a4c3c1773742))
+* **map:** surface missing background mode and denied authorization ([dd2e5a8](https://github.com/bradford-tech/expo-carplay/commit/dd2e5a89cabd529925e0617114464cbf08f2e202))
+* **navigation:** clear activeSessionId cache on disconnect ([ab14954](https://github.com/bradford-tech/expo-carplay/commit/ab1495479c453595cd475ece5616cd2e3895760f))
+* **scene:** synchronize SceneSession.current across threads ([b89b80e](https://github.com/bradford-tech/expo-carplay/commit/b89b80e264743e99ab3c59fee9fc2f525cbbcec1))
+
 ## [0.3.2](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.1...expo-carplay-v0.3.2) (2026-05-18)
 
 
