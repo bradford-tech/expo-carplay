@@ -29,7 +29,9 @@ private func projectPointOntoSegment(_ point: MKMapPoint, _ segStart: MKMapPoint
     let dx = segEnd.x - segStart.x
     let dy = segEnd.y - segStart.y
     let lengthSq = dx * dx + dy * dy
-    if lengthSq == 0 { return segStart }
+    if lengthSq == 0 {
+        return segStart
+    }
     let t = max(0, min(1, ((point.x - segStart.x) * dx + (point.y - segStart.y) * dy) / lengthSq))
     return MKMapPoint(x: segStart.x + t * dx, y: segStart.y + t * dy)
 }
@@ -110,6 +112,22 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         locationManager.activityType = .automotiveNavigation
+        // iOS auto-pause (default true) ends updates entirely for a
+        // when-in-use app until relaunch — and with .automotiveNavigation it
+        // is likely at low-speed-vehicle speeds or while stopped, freezing
+        // the camera mid-trip.
+        locationManager.pausesLocationUpdatesAutomatically = false
+        // The normal CarPlay case has the phone locked/pocketed; without this
+        // flag the manager's updates can be suspended even though the app
+        // declares the background mode. Guarded because setting it without
+        // UIBackgroundModes:location in the host app's Info.plist is a fatal
+        // error that terminates the app — this is a library, and not every
+        // consumer declares that mode.
+        let backgroundModes =
+            Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String] ?? []
+        if backgroundModes.contains("location") {
+            locationManager.allowsBackgroundLocationUpdates = true
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -247,8 +265,12 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         var heading = currentHeading
         if targetHeading >= 0 {
             var delta = targetHeading - currentHeading
-            if delta > 180 { delta -= 360 }
-            if delta < -180 { delta += 360 }
+            if delta > 180 {
+                delta -= 360
+            }
+            if delta < -180 {
+                delta += 360
+            }
             if abs(delta) > 2.0 {
                 let factor = if abs(delta) > 45.0 {
                     1.0
@@ -260,8 +282,12 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
                     0.3
                 }
                 heading = currentHeading + delta * factor
-                if heading < 0 { heading += 360 }
-                if heading >= 360 { heading -= 360 }
+                if heading < 0 {
+                    heading += 360
+                }
+                if heading >= 360 {
+                    heading -= 360
+                }
             }
         }
 
@@ -376,7 +402,9 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     func mapView(_: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         // Don't customize the user location dot
-        if annotation is MKUserLocation { return nil }
+        if annotation is MKUserLocation {
+            return nil
+        }
 
         guard let pointAnnotation = annotation as? MKPointAnnotation else { return nil }
 
