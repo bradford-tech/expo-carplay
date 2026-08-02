@@ -162,7 +162,7 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | --- | --- | --- |
 | `addConnectListener(listener)` | Native→JS | ● |
 | `addDisconnectListener(listener)` | Native→JS | ● |
-| `isConnected()` | JS | ● |
+| `isConnected()` | JS (latch seeded from native `isCarPlayConnected` at load) | ● |
 | `setRootTemplate(templateId)` | JS→Native | ● |
 | `pushTemplate(templateId)` | JS→Native | ● |
 | `popTemplate()` | JS→Native | ● |

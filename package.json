@@ -42,6 +42,9 @@
     "test": "expo-module test",
     "typecheck": "tsc --noEmit && npm run --prefix example typecheck"
   },
+  "jest": {
+    "preset": "expo-module-scripts"
+  },
   "overrides": {
     "@tootallnate/once": "^3.0.1",
     "postcss": "^8.5.10",

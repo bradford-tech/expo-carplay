@@ -17,6 +17,16 @@ ExpoCarPlay.addListener('onDisconnect', () => {
   connected = false;
 });
 
+// Seed the latch AFTER attaching listeners. The native onConnect emit is
+// fire-and-forget with no buffering, so a scene that connected before this
+// module loaded (CarPlay-initiated cold launch with the phone in a pocket)
+// never reaches the listeners — without this query, isConnected() reads
+// false-negative for the entire process lifetime. Listener-then-query
+// ordering means a connect landing in between is observed by both, which is
+// idempotent; the reverse order would drop it entirely.
+// See: bradford-tech/wheelhouse#553
+connected = ExpoCarPlay.isCarPlayConnected();
+
 export function isConnected(): boolean {
   return connected;
 }

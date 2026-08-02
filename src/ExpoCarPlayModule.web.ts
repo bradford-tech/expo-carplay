@@ -41,6 +41,10 @@ const webModule: ExpoCarPlayModule = {
     warn();
     return noopSubscription;
   },
+  isCarPlayConnected: (): boolean => {
+    warn();
+    return false;
+  },
   createMapTemplate: (_config?: MapTemplateConfig | null): Promise<string> => {
     warn();
     return Promise.resolve('');

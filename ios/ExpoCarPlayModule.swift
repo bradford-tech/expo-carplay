@@ -26,6 +26,13 @@ public class ExpoCarPlayModule: Module {
             "onTripStarted"
         )
 
+        // Synchronous by design: the JS side calls this at module load to seed
+        // its connection latch, recovering scenes whose onConnect emit was
+        // lost to the cold-launch race (fired before JS attached listeners).
+        Function("isCarPlayConnected") { () -> Bool in
+            SceneSession.current != nil
+        }
+
         AsyncFunction("createMapTemplate") { (config: MapTemplateConfig?) throws -> String in
             guard let session = SceneSession.current else {
                 throw CarPlayNotConnectedException()
