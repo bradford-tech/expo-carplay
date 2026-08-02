@@ -24,7 +24,25 @@ final class SceneSession {
     let navigationHandler: NavigationHandler
     let searchHandler: SearchTemplateHandler
 
-    static var current: SceneSession?
+    // Written on the main thread (scene delegate connect/disconnect), read
+    // from the JS thread (sync isCarPlayConnected) and the AsyncFunction
+    // background queue. The lock makes those cross-thread accesses
+    // well-defined rather than a benign-in-practice pointer race — and keeps
+    // this compiling once strict concurrency checking lands.
+    private static let currentLock = NSLock()
+    private static var _current: SceneSession?
+    static var current: SceneSession? {
+        get {
+            currentLock.lock()
+            defer { currentLock.unlock() }
+            return _current
+        }
+        set {
+            currentLock.lock()
+            defer { currentLock.unlock() }
+            _current = newValue
+        }
+    }
 
     init(
         interfaceController: CPInterfaceController,
