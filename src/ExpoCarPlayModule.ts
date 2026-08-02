@@ -26,7 +26,7 @@ export type ExpoCarPlayModule = {
    * Synchronous native query for scene existence. Exists because the
    * onConnect emit is fire-and-forget: a scene that connects before JS
    * attaches listeners (CarPlay-initiated cold launch) is otherwise
-   * unobservable. scene.ts uses it to seed the connection latch at load.
+   * unobservable. scene.ts delegates isConnected() to it on every call.
    */
   isCarPlayConnected(): boolean;
   createMapTemplate(config?: MapTemplateConfig | null): Promise<string>;

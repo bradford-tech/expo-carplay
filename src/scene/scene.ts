@@ -1,34 +1,20 @@
 // scene/scene.ts
 // Typed API for CarPlay connection lifecycle.
-// Maintains cached connection state for synchronous reads by hooks.
+// Connection state is read from native on demand — no JS-side cache.
 // See: docs/carplay-api-surface.md §1 — Scene Lifecycle & Interface Controller
 
 import type { EventSubscription } from 'expo-modules-core';
 
 import ExpoCarPlay from '../ExpoCarPlayModule';
 
-let connected = false;
-
-ExpoCarPlay.addListener('onConnect', () => {
-  connected = true;
-});
-
-ExpoCarPlay.addListener('onDisconnect', () => {
-  connected = false;
-});
-
-// Seed the latch AFTER attaching listeners. The native onConnect emit is
-// fire-and-forget with no buffering, so a scene that connected before this
-// module loaded (CarPlay-initiated cold launch with the phone in a pocket)
-// never reaches the listeners — without this query, isConnected() reads
-// false-negative for the entire process lifetime. Listener-then-query
-// ordering means a connect landing in between is observed by both, which is
-// idempotent; the reverse order would drop it entirely.
-// See: bradford-tech/wheelhouse#553
-connected = ExpoCarPlay.isCarPlayConnected();
-
+// Delegates to the native scene registry rather than caching in JS. A JS
+// latch fed by onConnect/onDisconnect misses any connect that fires before
+// this module loads (CarPlay-initiated cold launch — the emit is
+// fire-and-forget with no buffering; see bradford-tech/wheelhouse#553);
+// querying native on every call makes that class of staleness impossible.
+// Events remain the reactivity channel (useCarPlay, consumer listeners).
 export function isConnected(): boolean {
-  return connected;
+  return ExpoCarPlay.isCarPlayConnected();
 }
 
 export function addConnectListener(listener: () => void): EventSubscription {

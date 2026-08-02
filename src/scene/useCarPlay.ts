@@ -18,7 +18,9 @@ export function useCarPlay(): { connected: boolean } {
   useEffect(() => {
     const connectSub = addConnectListener(() => setConnected(true));
     const disconnectSub = addDisconnectListener(() => setConnected(false));
-    // Sync in case the event fired before the hook mounted
+    // Reconcile with the live native state in case it changed between render
+    // and effect — isConnected() queries native directly (see the connection
+    // state note in docs/carplay-api-surface.md §1).
     setConnected(isConnected());
     return () => {
       connectSub.remove();
