@@ -106,6 +106,14 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Force light mode on the CarPlay map regardless of the vehicle's
+        // day/night trait. Apple HIG generally prefers respecting the car's
+        // trait collection; consumers that opt in accept the tradeoff.
+        // Set on both the view controller (propagates to UIKit subviews) and
+        // the MKMapView directly (MapKit observes traits independently and
+        // would otherwise still switch tiles to night style).
+        overrideUserInterfaceStyle = .light
+        mapView.overrideUserInterfaceStyle = .light
         mapView.showsUserLocation = true
         mapView.delegate = self
         view.addSubview(mapView)

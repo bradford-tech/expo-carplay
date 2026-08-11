@@ -9,6 +9,9 @@ struct MapTemplateConfig: Record {
     @Field var mapButtons: [MapButtonConfig] = []
     @Field var automaticallyHidesNavigationBar: Bool = true
     @Field var hidesButtonsWithNavigationBar: Bool = true
+    /// Hex color (e.g., "#30B0C7") for the turn-by-turn guidance bar
+    /// background. When nil, CarPlay uses the system default (red).
+    @Field var guidanceBackgroundColor: String?
 }
 
 struct MapTemplateButtonsConfig: Record {

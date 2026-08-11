@@ -42,6 +42,11 @@ export type MapTemplateConfig = {
   mapButtons?: MapButtonConfig[];
   automaticallyHidesNavigationBar?: boolean;
   hidesButtonsWithNavigationBar?: boolean;
+  /**
+   * Hex color (e.g., "#30B0C7") for the turn-by-turn guidance bar
+   * background. When omitted, CarPlay uses the system default (red).
+   */
+  guidanceBackgroundColor?: string;
 };
 
 export type MapTemplateButtonsConfig = {

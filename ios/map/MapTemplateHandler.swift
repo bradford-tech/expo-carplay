@@ -35,6 +35,9 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         template.mapButtons = MapTemplateConverter.buildMapButtons(from: config.mapButtons)
         template.automaticallyHidesNavigationBar = config.automaticallyHidesNavigationBar
         template.hidesButtonsWithNavigationBar = config.hidesButtonsWithNavigationBar
+        if let hex = config.guidanceBackgroundColor {
+            template.guidanceBackgroundColor = ColorConverter.color(from: hex)
+        }
 
         return TemplateStore.shared.store(template)
     }
