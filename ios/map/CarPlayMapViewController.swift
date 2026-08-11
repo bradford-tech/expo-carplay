@@ -84,6 +84,18 @@ private let kIdleCameraPitch: CGFloat = 0
 private let kIdleCameraDistance: CLLocationDistance = 1500
 private let kIdleCameraHeading: CLLocationDirection = 0
 
+/// Camera follow mode for the CarPlay map.
+///
+/// The four modes differ in camera geometry and heading source, not in how
+/// they animate: every mode is applied through a single writer so the camera
+/// and the user cursor always move together.
+enum FollowMode: String {
+    case off
+    case browseNorthUp
+    case browseHeadingUp
+    case navigation
+}
+
 // MARK: - CarPlayMapViewController
 
 class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate {
@@ -101,6 +113,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     /// Camera state
     private var isFollowing: Bool = false
+    private var followMode: FollowMode = .off
     /// When true, the next didUpdate userLocation callback centers the map.
     private var needsInitialCenter: Bool = false
 
@@ -199,6 +212,43 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             isFollowing = false
             needsInitialCenter = false
             locationManager.stopUpdatingLocation()
+        }
+    }
+
+    func setFollowMode(_ rawMode: String) {
+        DispatchQueue.main.async { [self] in
+            let mode = FollowMode(rawValue: rawMode) ?? .off
+            // Skip only when the mode AND the follow state already agree.
+            // startFollowingUser/stopFollowingUser mutate isFollowing without
+            // touching followMode, so a mode-only guard would let
+            // stop-then-set-the-same-mode early-return and leave following
+            // permanently dead.
+            let alreadyApplied = mode == followMode && isFollowing == (mode != .off)
+            guard !alreadyApplied else { return }
+            followMode = mode
+
+            if mode == .off {
+                isFollowing = false
+                needsInitialCenter = false
+                locationManager.stopUpdatingLocation()
+                return
+            }
+
+            isFollowing = true
+            locationManager.requestWhenInUseAuthorization()
+            locationManager.startUpdatingLocation()
+
+            // Guarded exactly as startFollowingUser guards it:
+            // _centerOnUserLocation builds the IDLE camera, so recentering
+            // during an active route would snap flat, north-up and out to
+            // 1500m until the next fix pulled it back.
+            if !routeActive {
+                if let location = mapView.userLocation.location {
+                    _centerOnUserLocation(location.coordinate)
+                } else {
+                    needsInitialCenter = true
+                }
+            }
         }
     }
 

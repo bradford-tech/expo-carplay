@@ -6,6 +6,7 @@ import { type EventSubscription, requireNativeModule } from 'expo-modules-core';
 
 import type {
   EdgePadding,
+  FollowMode,
   MapTemplateButtonsConfig,
   MapTemplateConfig,
   RouteSegment,
@@ -36,6 +37,7 @@ export type ExpoCarPlayModule = {
   popTemplate(): Promise<void>;
   startFollowingUser(): Promise<void>;
   stopFollowingUser(): Promise<void>;
+  setFollowMode(mode: FollowMode): Promise<void>;
   setCarPlayRoute(
     segments: RouteSegment[],
     edgePadding?: EdgePadding | null

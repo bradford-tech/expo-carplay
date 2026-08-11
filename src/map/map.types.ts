@@ -57,3 +57,16 @@ export type MapTemplateButtonsConfig = {
   /** CarPlay shows up to 3 map buttons; additional entries are ignored. */
   mapButtons?: MapButtonConfig[];
 };
+
+/**
+ * Camera follow mode for the CarPlay map.
+ * - `off`: camera is not written; the user has panned away.
+ * - `browseNorthUp`: follows the user, north-up, flat.
+ * - `browseHeadingUp`: follows the user, rotated to GPS course, flat.
+ * - `navigation`: follows the user, tilted, oriented to the active route.
+ */
+export type FollowMode =
+  | 'off'
+  | 'browseNorthUp'
+  | 'browseHeadingUp'
+  | 'navigation';

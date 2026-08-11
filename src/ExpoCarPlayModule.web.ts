@@ -12,6 +12,7 @@ import type { EventSubscription } from 'expo-modules-core';
 import type { ExpoCarPlayModule } from './ExpoCarPlayModule';
 import type {
   EdgePadding,
+  FollowMode,
   MapTemplateButtonsConfig,
   MapTemplateConfig,
   RouteSegment,
@@ -72,6 +73,10 @@ const webModule: ExpoCarPlayModule = {
     return Promise.resolve();
   },
   stopFollowingUser: (): Promise<void> => {
+    warn();
+    return Promise.resolve();
+  },
+  setFollowMode: (_mode: FollowMode): Promise<void> => {
     warn();
     return Promise.resolve();
   },

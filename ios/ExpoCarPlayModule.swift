@@ -71,6 +71,13 @@ public class ExpoCarPlayModule: Module {
             session.mapHandler.stopFollowingUser()
         }
 
+        AsyncFunction("setFollowMode") { (mode: String) throws in
+            guard let session = SceneSession.current else {
+                throw CarPlayNotConnectedException()
+            }
+            session.mapHandler.setFollowMode(mode)
+        }
+
         AsyncFunction("setCarPlayRoute") { (segments: [RouteSegment], edgePadding: EdgePadding?) throws in
             guard let session = SceneSession.current else {
                 throw CarPlayNotConnectedException()
