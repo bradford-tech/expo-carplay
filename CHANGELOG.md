@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.3...expo-carplay-v0.4.0) (2026-08-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **map:** minimum iOS deployment target is now 16.4
+
+### Features
+
+* **map:** add guidanceBackgroundColor and force light-mode map ([e44f757](https://github.com/bradford-tech/expo-carplay/commit/e44f7571471ab6d827776b7474dd28a4b3d33f19))
+* **map:** add setFollowMode surface ([06a8e57](https://github.com/bradford-tech/expo-carplay/commit/06a8e5756551cb14e133a883ae90495a4e8f05d0))
+
+
+### Bug Fixes
+
+* **example:** keep following after a trip so the camera returns to browse ([68ca52c](https://github.com/bradford-tech/expo-carplay/commit/68ca52c86735de0a1daaf71990a1963940d165c1))
+* **map:** animate camera and user cursor in lockstep ([46b8728](https://github.com/bradford-tech/expo-carplay/commit/46b872892a626754d457ec7a1567c7e884ab4ff4))
+* **map:** bring the browse camera to street level and log the altitude branch ([ba87957](https://github.com/bradford-tech/expo-carplay/commit/ba879577bf48b1d53a2bdb3d2f23369a817d163d))
+* **map:** hold the camera still under GPS noise while stopped ([ffe88a5](https://github.com/bradford-tech/expo-carplay/commit/ffe88a5f6fe6de7bfb3b61d356bf651facf34677))
+
 ## [0.3.3](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.2...expo-carplay-v0.3.3) (2026-08-02)
 
 
