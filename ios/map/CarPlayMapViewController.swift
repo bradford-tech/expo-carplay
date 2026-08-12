@@ -321,7 +321,12 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     func locationManager(_: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard isFollowing, let location = locations.last else { return }
-        _updateCamera(coordinate: location.coordinate, course: location.course)
+        _updateCamera(
+            coordinate: location.coordinate,
+            course: location.course,
+            accuracy: location.horizontalAccuracy,
+            speed: location.speed
+        )
     }
 
     func locationManager(_: CLLocationManager, didFailWithError error: Error) {
@@ -341,6 +346,16 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     private static let kFollowAnimationDuration: TimeInterval = 1.0
     private static let kHeadingGateDegrees: Double = 2.0
+    /// Deadband floor. The threshold is half the reported horizontal accuracy
+    /// but never less than this, so a fix claiming implausibly good accuracy
+    /// — or a negative one, meaning invalid — cannot disable the deadband.
+    private static let kMinDeadbandMeters: CLLocationDistance = 5.0
+    /// At or above this speed the vehicle is moving, so the deadband does not
+    /// apply. A negative speed means CoreLocation has none; that compares
+    /// below the threshold, which deliberately treats an unknown speed as
+    /// parked — an unusable speed usually accompanies a poor-quality fix,
+    /// which is exactly when jitter rejection matters most.
+    private static let kStationarySpeedMps: CLLocationSpeed = 0.5
 
     /// Adaptive heading smoothing: larger course changes are applied more
     /// aggressively, small ones eased, and sub-gate jitter ignored entirely.
@@ -484,9 +499,43 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         )
     }
 
-    private func _updateCamera(coordinate coord: CLLocationCoordinate2D, course: CLLocationDirection) {
+    private func _updateCamera(
+        coordinate coord: CLLocationCoordinate2D,
+        course: CLLocationDirection,
+        accuracy: CLLocationAccuracy,
+        speed: CLLocationSpeed
+    ) {
         let mode = effectiveMode
         guard mode != .off else { return }
+
+        // Stationary deadband: GPS noise while parked would make the map
+        // wander and micro-reverse.
+        //
+        // Speed gates it, and that gate is load-bearing rather than a
+        // belt-and-braces check on the distance test. Distance alone cannot
+        // tell noise from slow travel: at 1 Hz fixes the 5 m floor also
+        // suppresses anything under ~11 mph, and a poor fix raising the
+        // threshold to 10 m pushes that to ~22 mph — above this vehicle
+        // class's whole range. The camera would then advance in steps
+        // instead of gliding, which is the opposite of what the single
+        // animated writer exists to achieve. Speed states the actual
+        // intent: only hold still when genuinely parked.
+        //
+        // Heading is deliberately NOT deadbanded — in browseHeadingUp the map
+        // must still rotate while stopped.
+        //
+        // Position is measured against the last coordinate we applied rather
+        // than the last one reported, so sub-threshold movement accumulates
+        // until it crosses and is never silently discarded.
+        var targetCoordinate = coord
+        if speed < Self.kStationarySpeedMps, let displayed = displayedCoordinate {
+            let threshold = max(Self.kMinDeadbandMeters, accuracy / 2.0)
+            let moved = CLLocation(latitude: displayed.latitude, longitude: displayed.longitude)
+                .distance(from: CLLocation(latitude: coord.latitude, longitude: coord.longitude))
+            if moved < threshold {
+                targetCoordinate = displayed
+            }
+        }
 
         var targetHeading: CLLocationDirection = 0
         switch mode {
@@ -500,11 +549,13 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             // heading describes the phone's orientation, not the vehicle's.
             targetHeading = course >= 0 ? smoothedHeading(towards: course) : currentHeading
         case .navigation:
-            targetHeading = smoothedHeading(towards: routeDerivedHeading(at: coord, fallback: course))
+            targetHeading = smoothedHeading(
+                towards: routeDerivedHeading(at: targetCoordinate, fallback: course)
+            )
         }
 
         applyFollowCamera(
-            coordinate: coord,
+            coordinate: targetCoordinate,
             heading: targetHeading,
             // The marker points where the vehicle is going in every mode —
             // only the camera's own heading varies by mode. A negative course
