@@ -107,6 +107,11 @@ export default function App() {
       });
       await setRootTemplate(templateId);
       console.log('CarPlay: map template set as root');
+      // Follow the user with no route set, so the browse camera is exercised
+      // on connect. Every other call site here follows a trip, which only
+      // ever shows the route camera.
+      await startFollowingUser();
+      console.log('CarPlay: following user (no route)');
     });
 
     const barButtonSub = addBarButtonPressedListener(async ({ id }) => {
