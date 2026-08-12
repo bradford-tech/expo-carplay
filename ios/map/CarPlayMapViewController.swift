@@ -80,7 +80,7 @@ private let kRouteCameraDistance: CLLocationDistance = 500
 // Idle camera (no active route): flat, north-up, zoomed out enough to show
 // nearby streets without the navigation-style tilt.
 private let kIdleCameraPitch: CGFloat = 0
-private let kIdleCameraDistance: CLLocationDistance = 1500
+private let kIdleCameraDistance: CLLocationDistance = 600
 
 /// Camera follow mode for the CarPlay map.
 ///
@@ -419,6 +419,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         // is one worth keeping: the first browse write after any other state
         // establishes the altitude rather than inheriting whatever the map
         // happened to be showing.
+        let seeded = browsing && !wasBrowsing
         let distance: CLLocationDistance = if !browsing {
             kRouteCameraDistance
         } else if wasBrowsing {
@@ -428,6 +429,18 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         }
         let pitch: CGFloat = browsing ? kIdleCameraPitch : kRouteCameraPitch
         wasBrowsing = browsing
+
+        #if DEBUG
+            // Which branch set the altitude, and what it actually applied.
+            // `seeded` is only meaningful for the browse modes: navigation
+            // always takes the fixed route distance, so it reports NO.
+            os_log(
+                "expo-carplay: [CarPlayCam] mode=%{public}@ dist=%{public}.0f seeded=%{public}@",
+                effectiveMode.rawValue,
+                distance,
+                seeded ? "YES" : "NO"
+            )
+        #endif
 
         let camera = MKMapCamera(
             lookingAtCenter: coordinate,
