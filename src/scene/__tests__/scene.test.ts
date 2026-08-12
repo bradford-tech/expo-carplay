@@ -2,8 +2,7 @@
 // isConnected() delegates to the synchronous native query — the native
 // SceneSession is the single source of truth for connection state, so a
 // scene that connected before the JS bundle loaded (CarPlay-initiated cold
-// launch, bradford-tech/wheelhouse#553) is visible without any JS-side
-// latch to seed or keep in sync.
+// launch) is visible without any JS-side latch to seed or keep in sync.
 
 import type { EventSubscription } from 'expo-modules-core';
 

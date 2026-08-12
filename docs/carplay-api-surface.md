@@ -56,7 +56,7 @@
 
 Manages the CarPlay connection lifecycle. When CarPlay connects, you receive a `CPInterfaceController` (and for navigation apps, a `CPWindow` for your map). The interface controller manages the template stack — pushing, popping, and presenting templates.
 
-**Connection state is a live native query.** The `onConnect` emit is fire-and-forget with no buffering, so a scene that connects before the JS bundle loads (CarPlay-initiated cold launch) never reaches JS listeners. `isConnected()` therefore delegates on every call to the synchronous native `isCarPlayConnected()` query (`SceneSession.current != nil`) rather than caching state in JS — there is no latch to go stale. Events remain the reactivity channel. Consumers should still reconcile an already-connected scene at startup: the connect *event* for a pre-JS connection remains unobservable by design (see wheelhouse#553).
+**Connection state is a live native query.** The `onConnect` emit is fire-and-forget with no buffering, so a scene that connects before the JS bundle loads (CarPlay-initiated cold launch) never reaches JS listeners. `isConnected()` therefore delegates on every call to the synchronous native `isCarPlayConnected()` query (`SceneSession.current != nil`) rather than caching state in JS — there is no latch to go stale. Events remain the reactivity channel. Consumers should still reconcile an already-connected scene at startup: the connect *event* for a pre-JS connection remains unobservable by design.
 
 ### CPTemplateApplicationScene
 
