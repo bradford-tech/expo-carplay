@@ -6,7 +6,7 @@
   "scripts": {
     "format": "prettier --write --cache --log-level warn \"**/*.{js,jsx,ts,tsx,json}\"",
     "postinstall": "patch-package",
-    "ios": "expo run:ios",
+    "ios": "expo run:ios --device",
     "lint": "expo lint . --fix -- --max-warnings=0",
     "prebuild": "expo prebuild --clean --platform ios",
     "start": "expo start",
