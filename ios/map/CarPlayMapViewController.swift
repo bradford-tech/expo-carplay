@@ -72,7 +72,6 @@ private func findClosestSegment(
 private let kSnapOffThreshold: CLLocationDistance = 15.0
 private let kSnapOnThreshold: CLLocationDistance = 8.0
 private let kWindowRadius = 10
-private let kAnimationDuration: TimeInterval = 1.0
 
 // Route-active camera: tilted, close-in, oriented to the current route segment.
 private let kRouteCameraPitch: CGFloat = 60
@@ -82,7 +81,6 @@ private let kRouteCameraDistance: CLLocationDistance = 500
 // nearby streets without the navigation-style tilt.
 private let kIdleCameraPitch: CGFloat = 0
 private let kIdleCameraDistance: CLLocationDistance = 1500
-private let kIdleCameraHeading: CLLocationDirection = 0
 
 /// Camera follow mode for the CarPlay map.
 ///
@@ -94,6 +92,14 @@ enum FollowMode: String {
     case browseNorthUp
     case browseHeadingUp
     case navigation
+}
+
+/// User-position marker owned by this controller rather than by MapKit.
+/// MapKit owns `MKUserLocation.coordinate` and will not let us animate it, so
+/// keeping the marker in lockstep with the camera requires our own annotation.
+final class UserCursorAnnotation: MKPointAnnotation {
+    var heading: CLLocationDirection = 0
+    var isArrow: Bool = false
 }
 
 // MARK: - CarPlayMapViewController
@@ -116,6 +122,33 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     private var followMode: FollowMode = .off
     /// When true, the next didUpdate userLocation callback centers the map.
     private var needsInitialCenter: Bool = false
+
+    private let cursor = UserCursorAnnotation()
+    private var cursorAdded = false
+    /// Last position we animated the camera/cursor toward. Used by the
+    /// stationary deadband and by heading-only writes, which must not
+    /// re-target position.
+    private var displayedCoordinate: CLLocationCoordinate2D?
+    /// Heading we last animated toward. Read instead of `mapView.camera.heading`,
+    /// which returns the model (target) value mid-animation, not what is on
+    /// screen — smoothing against it compounds error.
+    private var currentHeading: CLLocationDirection = 0
+    /// Whether the last camera write used browse geometry. The first browse
+    /// write after anything else establishes the zoom; later ones inherit it.
+    private var wasBrowsing = false
+
+    /// The mode the camera actually applies.
+    ///
+    /// An active route means navigation geometry AND route-derived heading,
+    /// whatever mode was requested — `startFollowingUser()` maps onto
+    /// `browseNorthUp`, so a consumer on the legacy entry point with a route
+    /// set would otherwise get the tilted, close-in camera locked to north.
+    /// Camera geometry and heading must key off the same value or they
+    /// disagree.
+    private var effectiveMode: FollowMode {
+        guard followMode != .off else { return .off }
+        return routeActive ? .navigation : followMode
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -189,13 +222,22 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     func startFollowingUser() {
         DispatchQueue.main.async { [self] in
             isFollowing = true
+            // Legacy entry point: the flat, north-up idle camera is what this
+            // method has always produced with no route, so it maps onto
+            // browseNorthUp. Kept in step with `followMode` because the camera
+            // now reads the mode. With a route set, `effectiveMode` overrides
+            // this to navigation, so route-oriented following still works for
+            // consumers that never call setFollowMode.
+            if followMode == .off {
+                followMode = .browseNorthUp
+            }
             locationManager.requestWhenInUseAuthorization()
             locationManager.startUpdatingLocation()
 
             // Center the map on the user when no route is active.
             // userTrackingMode = .follow doesn't reliably center the CarPlay
-            // map, so we set the idle camera explicitly — either immediately
-            // from the already-known userLocation, or on the next
+            // map, so we drive the camera explicitly — either immediately from
+            // the already-known userLocation, or on the next
             // mapView(_:didUpdate:) callback.
             if !routeActive {
                 if let location = mapView.userLocation.location {
@@ -210,6 +252,7 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     func stopFollowingUser() {
         DispatchQueue.main.async { [self] in
             isFollowing = false
+            followMode = .off
             needsInitialCenter = false
             locationManager.stopUpdatingLocation()
         }
@@ -238,10 +281,10 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
             locationManager.requestWhenInUseAuthorization()
             locationManager.startUpdatingLocation()
 
-            // Guarded exactly as startFollowingUser guards it:
-            // _centerOnUserLocation builds the IDLE camera, so recentering
-            // during an active route would snap flat, north-up and out to
-            // 1500m until the next fix pulled it back.
+            // Guarded exactly as startFollowingUser guards it: during an
+            // active route the per-fix camera update is already driving, and
+            // an immediate recenter at the last known heading would jerk the
+            // map before the next fix supplied the route-derived one.
             if !routeActive {
                 if let location = mapView.userLocation.location {
                     _centerOnUserLocation(location.coordinate)
@@ -266,17 +309,12 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     private func _centerOnUserLocation(_ coordinate: CLLocationCoordinate2D) {
         needsInitialCenter = false
-        // Use the same idle-camera shape as `_updateCamera`'s idle branch so
-        // the initial center and subsequent GPS-driven updates use a single
-        // source of truth — no setRegion-then-setCamera mismatch on first
-        // follow.
-        let camera = MKMapCamera(
-            lookingAtCenter: coordinate,
-            fromDistance: kIdleCameraDistance,
-            pitch: kIdleCameraPitch,
-            heading: kIdleCameraHeading
+        applyFollowCamera(
+            coordinate: coordinate,
+            heading: currentHeading,
+            cursorHeading: cursor.heading,
+            duration: 0.3
         )
-        mapView.setCamera(camera, animated: true)
     }
 
     // MARK: - CLLocationManagerDelegate
@@ -301,99 +339,165 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
 
     // MARK: - Camera Update (called from native CLLocationManager, always on main thread)
 
-    private func _updateCamera(coordinate coord: CLLocationCoordinate2D, course: CLLocationDirection) {
-        // Idle following (no route): flat overhead, north-up, recenter only.
-        // No heading rotation since the user isn't navigating a route.
-        guard routeActive else {
-            let idleCamera = MKMapCamera(
-                lookingAtCenter: coord,
-                fromDistance: kIdleCameraDistance,
-                pitch: kIdleCameraPitch,
-                heading: kIdleCameraHeading
-            )
-            UIView.animate(
-                withDuration: kAnimationDuration,
-                delay: 0,
-                options: [.curveLinear, .beginFromCurrentState],
-                animations: {
-                    self.mapView.camera = idleCamera
-                }
-            )
-            return
+    private static let kFollowAnimationDuration: TimeInterval = 1.0
+    private static let kHeadingGateDegrees: Double = 2.0
+
+    /// Adaptive heading smoothing: larger course changes are applied more
+    /// aggressively, small ones eased, and sub-gate jitter ignored entirely.
+    private func smoothedHeading(towards target: CLLocationDirection) -> CLLocationDirection {
+        guard target >= 0 else { return currentHeading }
+        var delta = target - currentHeading
+        if delta > 180 {
+            delta -= 360
         }
-
-        let currentHeading = mapView.camera.heading
-
-        // Determine target heading: route-derived if available, otherwise GPS course
-        var targetHeading = course
-        if let polyline = routeMapPoints, routePointCount > 1 {
-            let userPoint = MKMapPoint(coord)
-            let windowStart = lastMatchedIndex - kWindowRadius
-            let windowEnd = lastMatchedIndex + kWindowRadius
-            let snapResult = findClosestSegment(
-                userPoint: userPoint,
-                polyline: polyline,
-                pointCount: routePointCount,
-                fromIndex: windowStart,
-                toIndex: windowEnd
-            )
-
-            if snapResult.segmentIndex >= 0, snapResult.perpDistance < kSnapOffThreshold {
-                let idx = snapResult.segmentIndex
-                if idx < routePointCount - 1 {
-                    let segStart = polyline[idx].coordinate
-                    let segEnd = polyline[idx + 1].coordinate
-                    targetHeading = bearing(from: segStart, to: segEnd)
-                    lastMatchedIndex = idx
-                }
-            }
+        if delta < -180 {
+            delta += 360
         }
+        guard abs(delta) > Self.kHeadingGateDegrees else { return currentHeading }
 
-        // Adaptive heading smoothing
-        var heading = currentHeading
-        if targetHeading >= 0 {
-            var delta = targetHeading - currentHeading
-            if delta > 180 {
-                delta -= 360
-            }
-            if delta < -180 {
-                delta += 360
-            }
-            if abs(delta) > 2.0 {
-                let factor = if abs(delta) > 45.0 {
-                    1.0
-                } else if abs(delta) > 20.0 {
-                    0.7
-                } else if abs(delta) > 8.0 {
-                    0.5
-                } else {
-                    0.3
-                }
-                heading = currentHeading + delta * factor
-                if heading < 0 {
-                    heading += 360
-                }
-                if heading >= 360 {
-                    heading -= 360
-                }
-            }
+        let factor = if abs(delta) > 45.0 {
+            1.0
+        } else if abs(delta) > 20.0 {
+            0.7
+        } else if abs(delta) > 8.0 {
+            0.5
+        } else {
+            0.3
         }
+        var heading = currentHeading + delta * factor
+        if heading < 0 {
+            heading += 360
+        }
+        if heading >= 360 {
+            heading -= 360
+        }
+        return heading
+    }
 
-        // Animated camera transition
-        let navCamera = MKMapCamera(
-            lookingAtCenter: coord,
-            fromDistance: kRouteCameraDistance,
-            pitch: kRouteCameraPitch,
+    /// Heading of the route segment the user is currently snapped to, or
+    /// `course` when there is no route or the user has strayed off it.
+    private func routeDerivedHeading(
+        at coord: CLLocationCoordinate2D,
+        fallback course: CLLocationDirection
+    ) -> CLLocationDirection {
+        guard let polyline = routeMapPoints, routePointCount > 1 else { return course }
+        let userPoint = MKMapPoint(coord)
+        let snapResult = findClosestSegment(
+            userPoint: userPoint,
+            polyline: polyline,
+            pointCount: routePointCount,
+            fromIndex: lastMatchedIndex - kWindowRadius,
+            toIndex: lastMatchedIndex + kWindowRadius
+        )
+        guard snapResult.segmentIndex >= 0,
+              snapResult.perpDistance < kSnapOffThreshold,
+              snapResult.segmentIndex < routePointCount - 1
+        else { return course }
+        lastMatchedIndex = snapResult.segmentIndex
+        return bearing(
+            from: polyline[snapResult.segmentIndex].coordinate,
+            to: polyline[snapResult.segmentIndex + 1].coordinate
+        )
+    }
+
+    /// THE INVARIANT: camera and cursor are mutated inside one animation
+    /// block, always. This method holds the file's only assignment to
+    /// `mapView.camera` — a camera that animates while the marker moves on
+    /// MapKit's own schedule is what makes the position appear to rubber-band.
+    ///
+    /// `heading` orients the camera; `cursorHeading` orients the marker. The
+    /// two differ whenever the map is not heading-up: north-up pins the camera
+    /// at 0 while the marker still has to point where the vehicle is going.
+    private func applyFollowCamera(
+        coordinate: CLLocationCoordinate2D,
+        heading: CLLocationDirection,
+        cursorHeading: CLLocationDirection,
+        duration: TimeInterval
+    ) {
+        let browsing = effectiveMode != .navigation
+        // Browse keeps whatever zoom the user pinched to, but only once there
+        // is one worth keeping: the first browse write after any other state
+        // establishes the altitude rather than inheriting whatever the map
+        // happened to be showing.
+        let distance: CLLocationDistance = if !browsing {
+            kRouteCameraDistance
+        } else if wasBrowsing {
+            mapView.camera.centerCoordinateDistance
+        } else {
+            kIdleCameraDistance
+        }
+        let pitch: CGFloat = browsing ? kIdleCameraPitch : kRouteCameraPitch
+        wasBrowsing = browsing
+
+        let camera = MKMapCamera(
+            lookingAtCenter: coordinate,
+            fromDistance: distance,
+            pitch: pitch,
             heading: heading
         )
 
+        if !cursorAdded {
+            cursor.coordinate = coordinate
+            mapView.addAnnotation(cursor)
+            cursorAdded = true
+        }
+
+        displayedCoordinate = coordinate
+        currentHeading = heading
+        cursor.heading = cursorHeading
+
+        // Shortest way round, so a course crossing north turns the marker a
+        // couple of degrees instead of spinning it the long way.
+        var rotationDegrees = cursorHeading - heading
+        if rotationDegrees > 180 {
+            rotationDegrees -= 360
+        }
+        if rotationDegrees < -180 {
+            rotationDegrees += 360
+        }
+        let rotation = rotationDegrees * .pi / 180.0
+
         UIView.animate(
-            withDuration: kAnimationDuration,
+            withDuration: duration,
             delay: 0,
-            options: [.curveLinear, .beginFromCurrentState],
-            animations: {
-                self.mapView.camera = navCamera
+            options: [.curveLinear, .beginFromCurrentState, .allowUserInteraction],
+            animations: { [self] in
+                mapView.camera = camera
+                cursor.coordinate = coordinate
+                if let cursorView = mapView.view(for: cursor) {
+                    cursorView.transform = CGAffineTransformMakeRotation(rotation)
+                }
             }
+        )
+    }
+
+    private func _updateCamera(coordinate coord: CLLocationCoordinate2D, course: CLLocationDirection) {
+        let mode = effectiveMode
+        guard mode != .off else { return }
+
+        var targetHeading: CLLocationDirection = 0
+        switch mode {
+        case .off:
+            return
+        case .browseNorthUp:
+            targetHeading = 0
+        case .browseHeadingUp:
+            // GPS course only — never the compass. During CarPlay use the
+            // phone is typically pocketed or in a cupholder, so magnetometer
+            // heading describes the phone's orientation, not the vehicle's.
+            targetHeading = course >= 0 ? smoothedHeading(towards: course) : currentHeading
+        case .navigation:
+            targetHeading = smoothedHeading(towards: routeDerivedHeading(at: coord, fallback: course))
+        }
+
+        applyFollowCamera(
+            coordinate: coord,
+            heading: targetHeading,
+            // The marker points where the vehicle is going in every mode —
+            // only the camera's own heading varies by mode. A negative course
+            // means CoreLocation has none, so hold the last one.
+            cursorHeading: course >= 0 ? course : cursor.heading,
+            duration: Self.kFollowAnimationDuration
         )
     }
 
@@ -488,10 +592,31 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         _centerOnUserLocation(location.coordinate)
     }
 
-    func mapView(_: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        // Don't customize the user location dot
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation {
-            return nil
+            // Our cursor is active — hide MapKit's dot so only one marker shows.
+            let hidden = MKAnnotationView(annotation: annotation, reuseIdentifier: "hiddenUserLocation")
+            hidden.frame = .zero
+            hidden.isHidden = true
+            hidden.alpha = 0
+            return hidden
+        }
+
+        if let cursorAnnotation = annotation as? UserCursorAnnotation {
+            // FALLBACK SITE — this one expression is the whole decision.
+            // `MKUserLocationView` is public SDK API (iOS 14+), but Apple does
+            // not document whether it draws the system dot when bound to an
+            // annotation that is not `MKUserLocation`. If it renders empty —
+            // the map slides correctly but no marker is visible anywhere —
+            // swap the `??` operand below for an `MKAnnotationView` whose
+            // `image` is a 22 pt blue circle with a 3 pt white ring and a soft
+            // shadow. Nothing else in this file changes: the cursor is
+            // positioned and rotated through `applyFollowCamera`, which only
+            // needs *some* view back from here.
+            let view = mapView.dequeueReusableAnnotationView(withIdentifier: "userCursor")
+                ?? MKUserLocationView(annotation: cursorAnnotation, reuseIdentifier: "userCursor")
+            view.annotation = cursorAnnotation
+            return view
         }
 
         guard let pointAnnotation = annotation as? MKPointAnnotation else { return nil }
