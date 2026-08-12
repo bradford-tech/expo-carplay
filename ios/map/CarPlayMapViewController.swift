@@ -137,6 +137,38 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     /// write after anything else establishes the zoom; later ones inherit it.
     private var wasBrowsing = false
 
+    #if DEBUG
+        /// Speed from the most recent location update, for the [CarPlayCam]
+        /// diagnostic only. Kept out of `applyFollowCamera`'s signature so a
+        /// debug concern does not shape the camera writer's interface.
+        private var lastReportedSpeed: CLLocationSpeed = -1
+    #endif
+
+    /// Camera geometry set from JS. The negative-means-unset sentinel is
+    /// decoded once, in `setCameraGeometry`, so nil here simply means "no
+    /// override" and every read below is a plain fallback to the native
+    /// default. No call site has to know the wire convention.
+    private var browseDistanceOverride: CLLocationDistance?
+    private var browsePitchOverride: CGFloat?
+    private var navigationDistanceOverride: CLLocationDistance?
+    private var navigationPitchOverride: CGFloat?
+
+    private var browseDistance: CLLocationDistance {
+        browseDistanceOverride ?? kIdleCameraDistance
+    }
+
+    private var browsePitch: CGFloat {
+        browsePitchOverride ?? kIdleCameraPitch
+    }
+
+    private var navigationDistance: CLLocationDistance {
+        navigationDistanceOverride ?? kRouteCameraDistance
+    }
+
+    private var navigationPitch: CGFloat {
+        navigationPitchOverride ?? kRouteCameraPitch
+    }
+
     /// The mode the camera actually applies.
     ///
     /// An active route means navigation geometry AND route-derived heading,
@@ -295,6 +327,28 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         }
     }
 
+    /// Override camera geometry from JS, so framing can be tuned without a
+    /// native build.
+    ///
+    /// Each call replaces the whole geometry rather than patching it: a
+    /// negative field means "use the native default", and an omitted field
+    /// arrives as negative. Zero is not a sentinel — it is a legal pitch, and
+    /// the one the browse modes use.
+    ///
+    /// Applies on the next camera write; this does not move the camera itself.
+    func setCameraGeometry(_ geometry: CameraGeometryConfig) {
+        DispatchQueue.main.async { [self] in
+            browseDistanceOverride = geometry.browseDistance >= 0 ? geometry.browseDistance : nil
+            browsePitchOverride = geometry.browsePitch >= 0 ? CGFloat(geometry.browsePitch) : nil
+            navigationDistanceOverride = geometry.navigationDistance >= 0
+                ? geometry.navigationDistance
+                : nil
+            navigationPitchOverride = geometry.navigationPitch >= 0
+                ? CGFloat(geometry.navigationPitch)
+                : nil
+        }
+    }
+
     func setRoute(segments: [RouteSegment], edgePadding: EdgePadding? = nil) {
         DispatchQueue.main.async { [self] in
             _setRouteOnMain(segments: segments, edgePadding: edgePadding)
@@ -355,6 +409,10 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     /// below the threshold, which deliberately treats an unknown speed as
     /// parked — an unusable speed usually accompanies a poor-quality fix,
     /// which is exactly when jitter rejection matters most.
+    ///
+    /// Must stay strictly positive. Tuning it to zero would leave an invalid
+    /// -1 speed comparing as *moving*, silently inverting that intent, and
+    /// neither the compiler nor a test would say so.
     private static let kStationarySpeedMps: CLLocationSpeed = 0.5
 
     /// Adaptive heading smoothing: larger course changes are applied more
@@ -436,24 +494,32 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
         // happened to be showing.
         let seeded = browsing && !wasBrowsing
         let distance: CLLocationDistance = if !browsing {
-            kRouteCameraDistance
+            navigationDistance
         } else if wasBrowsing {
             mapView.camera.centerCoordinateDistance
         } else {
-            kIdleCameraDistance
+            browseDistance
         }
-        let pitch: CGFloat = browsing ? kIdleCameraPitch : kRouteCameraPitch
+        let pitch: CGFloat = browsing ? browsePitch : navigationPitch
         wasBrowsing = browsing
 
         #if DEBUG
             // Which branch set the altitude, and what it actually applied.
             // `seeded` is only meaningful for the browse modes: navigation
             // always takes the fixed route distance, so it reports NO.
+            //
+            // `speed` is the value the deadband gated on, in m/s, and is the
+            // only visible evidence of which branch that took: a moving fix
+            // must still move the camera. A negative reading means
+            // CoreLocation reported no speed — including on a write that did
+            // not come from a location update at all, such as the initial
+            // centre.
             os_log(
-                "expo-carplay: [CarPlayCam] mode=%{public}@ dist=%{public}.0f seeded=%{public}@",
+                "expo-carplay: [CarPlayCam] mode=%{public}@ dist=%{public}.0f seeded=%{public}@ speed=%{public}.1f",
                 effectiveMode.rawValue,
                 distance,
-                seeded ? "YES" : "NO"
+                seeded ? "YES" : "NO",
+                lastReportedSpeed
             )
         #endif
 
@@ -507,6 +573,10 @@ class CarPlayMapViewController: UIViewController, MKMapViewDelegate, CLLocationM
     ) {
         let mode = effectiveMode
         guard mode != .off else { return }
+
+        #if DEBUG
+            lastReportedSpeed = speed
+        #endif
 
         // Stationary deadband: GPS noise while parked would make the map
         // wander and micro-reverse.

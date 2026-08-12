@@ -6,6 +6,7 @@ import type { EventSubscription } from 'expo-modules-core';
 
 import ExpoCarPlay from '../ExpoCarPlayModule';
 import type {
+  CameraGeometryConfig,
   EdgePadding,
   FollowMode,
   MapTemplateButtonsConfig,
@@ -29,6 +30,12 @@ export async function stopFollowingUser(): Promise<void> {
 
 export async function setFollowMode(mode: FollowMode): Promise<void> {
   await ExpoCarPlay.setFollowMode(mode);
+}
+
+export async function setCameraGeometry(
+  geometry: CameraGeometryConfig
+): Promise<void> {
+  await ExpoCarPlay.setCameraGeometry(geometry);
 }
 
 export async function setCarPlayRoute(

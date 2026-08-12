@@ -195,6 +195,8 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 | `createMapTemplate(config?)` | JS→Native | ● |
 | `startFollowingUser()` | JS→Native | ● |
 | `stopFollowingUser()` | JS→Native | ● |
+| `setFollowMode(mode)` | JS→Native | ● |
+| `setCameraGeometry(geometry)` | JS→Native | ● |
 | `setCarPlayRoute(segments)` | JS→Native | ● |
 | `clearCarPlayRoute()` | JS→Native | ● |
 | Map delegate (panning events) | Native→JS | ○ |

@@ -98,6 +98,10 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
         mapViewController.setFollowMode(mode)
     }
 
+    func setCameraGeometry(_ geometry: CameraGeometryConfig) {
+        mapViewController.setCameraGeometry(geometry)
+    }
+
     func setRoute(segments: [RouteSegment], edgePadding: EdgePadding?) {
         mapViewController.setRoute(segments: segments, edgePadding: edgePadding)
     }

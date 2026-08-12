@@ -70,3 +70,28 @@ export type FollowMode =
   | 'browseNorthUp'
   | 'browseHeadingUp'
   | 'navigation';
+
+/**
+ * Camera geometry for the two follow families, so framing can be tuned
+ * without a native build.
+ *
+ * Each call replaces the whole geometry: a field you omit reverts to the
+ * native default rather than keeping a value set by an earlier call. Pass all
+ * four together if you are tuning more than one.
+ *
+ * A negative value also means "use the native default". Zero is not a
+ * sentinel — it is a legal pitch, and the one browse mode uses.
+ *
+ * Takes effect on the next location update; it does not move the camera by
+ * itself.
+ */
+export type CameraGeometryConfig = {
+  /** Metres from the ground for `browseNorthUp` and `browseHeadingUp`. */
+  browseDistance?: number;
+  /** Degrees of tilt for the browse modes. 0 is flat, looking straight down. */
+  browsePitch?: number;
+  /** Metres from the ground while a route is active. */
+  navigationDistance?: number;
+  /** Degrees of tilt while a route is active. */
+  navigationPitch?: number;
+};

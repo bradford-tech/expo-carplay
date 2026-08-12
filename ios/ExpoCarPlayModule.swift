@@ -78,6 +78,13 @@ public class ExpoCarPlayModule: Module {
             session.mapHandler.setFollowMode(mode)
         }
 
+        AsyncFunction("setCameraGeometry") { (geometry: CameraGeometryConfig) throws in
+            guard let session = SceneSession.current else {
+                throw CarPlayNotConnectedException()
+            }
+            session.mapHandler.setCameraGeometry(geometry)
+        }
+
         AsyncFunction("setCarPlayRoute") { (segments: [RouteSegment], edgePadding: EdgePadding?) throws in
             guard let session = SceneSession.current else {
                 throw CarPlayNotConnectedException()

@@ -31,6 +31,18 @@ struct MapButtonConfig: Record {
     @Field var hidden: Bool = false
 }
 
+/// Camera geometry overrides, so framing can be tuned without a native build.
+///
+/// A negative value means "unset — keep the native default", and that is also
+/// what an omitted field arrives as. Zero cannot be the sentinel: it is a
+/// legal pitch, and the one the browse modes use.
+struct CameraGeometryConfig: Record {
+    @Field var browseDistance: Double = -1
+    @Field var browsePitch: Double = -1
+    @Field var navigationDistance: Double = -1
+    @Field var navigationPitch: Double = -1
+}
+
 struct RouteSegment: Record {
     @Field var coordinates: [Coordinate]
     @Field var color: String
