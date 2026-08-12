@@ -14,7 +14,6 @@ import {
   showTripPreviews,
   startFollowingUser,
   startNavigation,
-  stopFollowingUser,
   stopNavigation,
   updateManeuvers,
   updateSearchResults,
@@ -182,8 +181,11 @@ export default function App() {
   };
 
   const handleStopNavigation = async () => {
+    // Keep following: clearing the route drops the camera back to the browse
+    // geometry on the next location update. Calling stopFollowingUser() here
+    // would instead leave the camera frozen in its last navigation pose, since
+    // nothing would own it afterwards.
     await stopNavigation();
-    await stopFollowingUser();
     await clearCarPlayRoute();
     console.log('CarPlay: navigation stopped');
   };
