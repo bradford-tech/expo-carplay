@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.4.0...expo-carplay-v0.4.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **navigation:** read rootTemplate on the main actor ([b8f3bdc](https://github.com/bradford-tech/expo-carplay/commit/b8f3bdcbc98d1262e552aaf160a741d293c112cc))
+* **scene:** own the template store per scene session ([8980eb6](https://github.com/bradford-tech/expo-carplay/commit/8980eb6658e42b9f072f692e5c542e885210b6e4))
+
 ## [0.4.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.3.3...expo-carplay-v0.4.0) (2026-08-12)
 
 
