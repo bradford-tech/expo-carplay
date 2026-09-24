@@ -5,13 +5,13 @@
 
 import ExpoModulesCore
 
-final class TemplateNotFoundException: GenericException<String> {
+final class TemplateNotFoundException: GenericException<String>, @unchecked Sendable {
     override var reason: String {
         "Template not found: \(param)"
     }
 }
 
-final class CarPlayNotConnectedException: Exception {
+final class CarPlayNotConnectedException: Exception, @unchecked Sendable {
     override var reason: String {
         "CarPlay is not connected"
     }
@@ -22,7 +22,7 @@ final class CarPlayNotConnectedException: Exception {
 /// mapTemplateId parameter, this collapses into TemplateNotFoundException
 /// (wrong id) + a new TemplateTypeMismatchException (id resolves to non-map).
 /// Consumers should not pin to ERR_NO_MAP_TEMPLATE.
-final class NoMapTemplateException: Exception {
+final class NoMapTemplateException: Exception, @unchecked Sendable {
     override var reason: String {
         "No CPMapTemplate at root — startNavigation requires the map template to be the root."
     }
