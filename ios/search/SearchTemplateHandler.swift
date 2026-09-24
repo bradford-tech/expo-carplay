@@ -7,10 +7,12 @@ import CarPlay
 import Foundation
 
 final class SearchTemplateHandler: NSObject, CPSearchTemplateDelegate {
+    private let templateStore: TemplateStore
     private var pendingCompletions: [String: ([CPListItem]) -> Void] = [:]
     private var currentRequestId: String?
 
-    override init() {
+    init(templateStore: TemplateStore) {
+        self.templateStore = templateStore
         super.init()
     }
 
@@ -19,7 +21,7 @@ final class SearchTemplateHandler: NSObject, CPSearchTemplateDelegate {
     func create() -> String {
         let template = CPSearchTemplate()
         template.delegate = self
-        return TemplateStore.shared.store(template)
+        return templateStore.store(template)
     }
 
     func updateResults(requestId: String, items: [SearchResultItem]) {

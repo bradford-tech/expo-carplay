@@ -1,5 +1,5 @@
 // MapTemplateHandler.swift
-// Creates CPMapTemplate instances and stores them in TemplateStore.
+// Creates CPMapTemplate instances and stores them in the scene's TemplateStore.
 // Forwards map control calls to CarPlayMapViewController.
 // Init-injected per Phase D1's DI rework (no more *.shared).
 // See: docs/carplay-api-surface.md §2 — Map Template & Map Buttons
@@ -11,15 +11,18 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
     private let interfaceController: CPInterfaceController
     private let mapViewController: CarPlayMapViewController
     private let navigationHandler: NavigationHandler
+    private let templateStore: TemplateStore
 
     init(
         interfaceController: CPInterfaceController,
         mapViewController: CarPlayMapViewController,
-        navigationHandler: NavigationHandler
+        navigationHandler: NavigationHandler,
+        templateStore: TemplateStore
     ) {
         self.interfaceController = interfaceController
         self.mapViewController = mapViewController
         self.navigationHandler = navigationHandler
+        self.templateStore = templateStore
         super.init()
     }
 
@@ -39,7 +42,7 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
             template.guidanceBackgroundColor = ColorConverter.color(from: hex)
         }
 
-        return TemplateStore.shared.store(template)
+        return templateStore.store(template)
     }
 
     func updateButtons(config: MapTemplateButtonsConfig) {

@@ -47,14 +47,19 @@ public class ExpoCarPlayModule: Module {
             session.mapHandler.updateButtons(config: config)
         }
 
+        // Template-stack functions: scene guard first, then
+        // `session.template(_:)` — see SceneSession for why that order matters.
+        // CPInterfaceController is main-actor-only, so the call itself hops
+        // to main.
         AsyncFunction("setRootTemplate") { (templateId: String) throws in
-            guard let template = TemplateStore.shared.get(templateId) else {
-                throw TemplateNotFoundException(templateId)
-            }
-            guard let interfaceController = SceneSession.current?.interfaceController else {
+            guard let session = SceneSession.current else {
                 throw CarPlayNotConnectedException()
             }
-            interfaceController.setRootTemplate(template, animated: true, completion: nil)
+            let template = try session.template(templateId)
+            let interfaceController = session.interfaceController
+            DispatchQueue.main.async {
+                interfaceController.setRootTemplate(template, animated: true, completion: nil)
+            }
         }
 
         AsyncFunction("startFollowingUser") { () throws in
@@ -159,12 +164,11 @@ public class ExpoCarPlayModule: Module {
         }
 
         AsyncFunction("pushTemplate") { (templateId: String) throws in
-            guard let template = TemplateStore.shared.get(templateId) else {
-                throw TemplateNotFoundException(templateId)
-            }
-            guard let interfaceController = SceneSession.current?.interfaceController else {
+            guard let session = SceneSession.current else {
                 throw CarPlayNotConnectedException()
             }
+            let template = try session.template(templateId)
+            let interfaceController = session.interfaceController
             DispatchQueue.main.async {
                 interfaceController.pushTemplate(template, animated: true, completion: nil)
             }

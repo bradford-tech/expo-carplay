@@ -1,6 +1,7 @@
 // SceneSession.swift
 // Holds references to the active scene's CPInterfaceController, CPWindow,
-// CarPlayMapViewController, and the three feature handlers.
+// CarPlayMapViewController, the scene's TemplateStore, and the three
+// feature handlers.
 //
 // `static var current` is the access point for ExpoCarPlayModule's
 // AsyncFunctions — an honest "the one connected scene at a time"
@@ -20,6 +21,10 @@ final class SceneSession {
     let interfaceController: CPInterfaceController
     let window: CPWindow
     let mapViewController: CarPlayMapViewController
+    /// Templates created during this scene. Owned here, not module-wide, so
+    /// a template lookup and the scene guard that precedes it read the same
+    /// snapshot — see TemplateStore.swift.
+    let templateStore: TemplateStore
     let mapHandler: MapTemplateHandler
     let navigationHandler: NavigationHandler
     let searchHandler: SearchTemplateHandler
@@ -48,6 +53,7 @@ final class SceneSession {
         interfaceController: CPInterfaceController,
         window: CPWindow,
         mapViewController: CarPlayMapViewController,
+        templateStore: TemplateStore,
         mapHandler: MapTemplateHandler,
         navigationHandler: NavigationHandler,
         searchHandler: SearchTemplateHandler
@@ -55,8 +61,24 @@ final class SceneSession {
         self.interfaceController = interfaceController
         self.window = window
         self.mapViewController = mapViewController
+        self.templateStore = templateStore
         self.mapHandler = mapHandler
         self.navigationHandler = navigationHandler
         self.searchHandler = searchHandler
+    }
+
+    /// Resolves a JS template id against this scene's store.
+    ///
+    /// Callers obtain `self` from `SceneSession.current` and then call this,
+    /// so the scene guard and the template lookup read one snapshot. That is
+    /// what keeps the two exceptions honest: a disconnect racing the call is
+    /// `CarPlayNotConnectedException` (no session), and
+    /// `TemplateNotFoundException` is reserved for an id this scene never
+    /// issued — including ids minted by an earlier scene.
+    func template(_ id: String) throws -> CPTemplate {
+        guard let template = templateStore.get(id) else {
+            throw TemplateNotFoundException(id)
+        }
+        return template
     }
 }
