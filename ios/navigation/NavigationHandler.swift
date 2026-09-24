@@ -22,7 +22,9 @@ final class NavigationHandler {
 
     /// Threading convention for this file: `await MainActor.run` when the call
     /// needs to return a value to the awaiting AsyncFunction (as here);
-    /// `DispatchQueue.main.async` for fire-and-forget updates.
+    /// `DispatchQueue.main.async` for fire-and-forget updates. Every
+    /// `CPInterfaceController` / `CPMapTemplate` access, including the
+    /// `findMapTemplate()` guard, happens inside that main-thread hop.
     func startNavigation(tripConfig: TripConfig) async -> String? {
         // Records validated the input; trip construction is now infallible.
         let trip = TripBuilder.build(from: tripConfig)
@@ -57,21 +59,23 @@ final class NavigationHandler {
     func showTripPreviews(tripConfigs: [TripConfig]) {
         // TripBuilder.build is now infallible — `map` instead of `compactMap`.
         let trips = tripConfigs.map { TripBuilder.build(from: $0) }
-        guard !trips.isEmpty, let mapTemplate = findMapTemplate() else { return }
+        guard !trips.isEmpty else { return }
 
-        previewedTrips = trips
+        DispatchQueue.main.async { [self] in
+            guard let mapTemplate = findMapTemplate() else { return }
 
-        DispatchQueue.main.async {
+            // Written on main so it matches where tripIndex(for:) reads it:
+            // CPMapTemplateDelegate callbacks arrive on the main thread.
+            previewedTrips = trips
             mapTemplate.showTripPreviews(trips, textConfiguration: nil)
         }
     }
 
     func hideTripPreviews() {
-        guard let mapTemplate = findMapTemplate() else { return }
+        DispatchQueue.main.async { [self] in
+            guard let mapTemplate = findMapTemplate() else { return }
 
-        previewedTrips = []
-
-        DispatchQueue.main.async {
+            previewedTrips = []
             mapTemplate.hideTripPreviews()
         }
     }
@@ -115,6 +119,7 @@ final class NavigationHandler {
 
     // MARK: - Helpers
 
+    /// Main thread only: `CPInterfaceController` is `CARPLAY_TEMPLATE_UI_ACTOR`, so callers must already be on main.
     private func findMapTemplate() -> CPMapTemplate? {
         interfaceController.rootTemplate as? CPMapTemplate
     }

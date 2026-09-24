@@ -46,9 +46,12 @@ final class MapTemplateHandler: NSObject, CPMapTemplateDelegate {
     }
 
     func updateButtons(config: MapTemplateButtonsConfig) {
-        guard let mapTemplate = interfaceController.rootTemplate as? CPMapTemplate else { return }
+        DispatchQueue.main.async { [self] in
+            // CPInterfaceController is CARPLAY_TEMPLATE_UI_ACTOR (main-actor only),
+            // so the rootTemplate read has to happen on main, not on the
+            // AsyncFunction queue that called us.
+            guard let mapTemplate = interfaceController.rootTemplate as? CPMapTemplate else { return }
 
-        DispatchQueue.main.async {
             // Optional arrays: nil = leave alone, empty = clear that group.
             if let leading = config.leadingNavigationBarButtons {
                 mapTemplate.leadingNavigationBarButtons = MapTemplateConverter.buildBarButtons(from: leading)
