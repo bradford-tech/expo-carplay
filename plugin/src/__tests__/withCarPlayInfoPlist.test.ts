@@ -1,6 +1,7 @@
 import {
   applySceneManifest,
   assertSceneLifecycleSupport,
+  PHONE_SCENE_DELEGATE_SOURCE,
 } from '../withCarPlayInfoPlist';
 
 // The manifest SDK 58's `expo-template-bare-minimum` ships in Info.plist.
@@ -85,5 +86,43 @@ describe('assertSceneLifecycleSupport', () => {
     expect(() =>
       assertSceneLifecycleSupport('58.0.16', providerAppDelegate)
     ).not.toThrow();
+  });
+});
+
+describe('PHONE_SCENE_DELEGATE_SOURCE', () => {
+  it('subclasses ExpoAppSceneDelegate from the Expo module', () => {
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain('internal import Expo');
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain('@objc(PhoneSceneDelegate)');
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'class PhoneSceneDelegate: ExpoAppSceneDelegate'
+    );
+  });
+
+  it('defers to super on a phone-first launch and never starts React Native itself', () => {
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'super.scene(scene, willConnectTo: session, options: connectionOptions)'
+    );
+    expect(PHONE_SCENE_DELEGATE_SOURCE).not.toContain('startReactNative');
+  });
+
+  it('adopts an existing window on a CarPlay-first launch', () => {
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'as? ExpoReactNativeFactoryProvider'
+    );
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'existing.windowScene = windowScene'
+    );
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'existing.makeKeyAndVisible()'
+    );
+  });
+
+  it('forwards cold-start URLs and user activities on the adopt path', () => {
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'connectionOptions.urlContexts'
+    );
+    expect(PHONE_SCENE_DELEGATE_SOURCE).toContain(
+      'connectionOptions.userActivities'
+    );
   });
 });
