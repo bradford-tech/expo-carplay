@@ -232,7 +232,7 @@ class PhoneSceneDelegate: ExpoAppSceneDelegate {
     self.scene(scene, openURLContexts: connectionOptions.urlContexts)
     connectionOptions.userActivities.forEach { self.scene(scene, continue: $0) }
     if let shortcutItem = connectionOptions.shortcutItem {
-      windowScene(windowScene, performActionFor: shortcutItem) { _ in }
+      self.windowScene(windowScene, performActionFor: shortcutItem) { _ in }
     }
   }
 }

@@ -1,11 +1,13 @@
 // CarPlaySceneDelegate.swift
 // Implements CPTemplateApplicationSceneDelegate for navigation apps.
-// Owns the CarPlay connection lifecycle: constructs handlers and
-// CarPlayMapViewController on connect, populates SceneSession.current,
-// tears them down on disconnect.
+// Owns the CarPlay connection lifecycle: makes sure React Native is running
+// (CarPlay-first cold launch), constructs handlers and CarPlayMapViewController
+// on connect, populates SceneSession.current, tears them down on disconnect.
 // See: docs/superpowers/specs/2026-05-16-di-rework-design.md
 
 import CarPlay
+import Expo
+import React
 
 @objc(CarPlaySceneDelegate)
 class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
@@ -15,6 +17,8 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
         didConnect interfaceController: CPInterfaceController,
         to window: CPWindow
     ) {
+        ensureReactNativeStarted()
+
         let mapViewController = CarPlayMapViewController()
         window.rootViewController = mapViewController
 
@@ -62,5 +66,25 @@ class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
         // whose templates are already gone.
         SceneSession.current = nil
         CarPlayEventEmitter.shared.emit("onDisconnect")
+    }
+
+    /// CarPlay-first cold launch: only the CarPlay scene connects, so Expo's
+    /// phone-scene delegate (which creates the window and starts React Native)
+    /// never runs. Start React Native into a scene-less placeholder window; the
+    /// generated PhoneSceneDelegate adopts it when the phone scene connects.
+    /// Storing the window on the provider also satisfies expo-updates'
+    /// getWindow() fallback (expo/expo#50870).
+    private func ensureReactNativeStarted() {
+        guard let provider = UIApplication.shared.delegate as? ExpoReactNativeFactoryProvider,
+              provider.window == nil,
+              let factory = provider.reactNativeFactory
+        else { return }
+        let placeholder = UIWindow(frame: UIScreen.main.bounds)
+        provider.window = placeholder
+        factory.startReactNative(
+            withModuleName: provider.reactNativeFactoryModuleName,
+            in: placeholder,
+            launchOptions: nil
+        )
     }
 }
