@@ -30,7 +30,7 @@
   "scripts": {
     "build": "EXPO_NONINTERACTIVE=1 expo-module build",
     "build:plugin": "EXPO_NONINTERACTIVE=1 expo-module build plugin",
-    "clean": "expo-module clean",
+    "clean": "expo-module clean && expo-module clean plugin && rm -f .tsbuildinfo plugin/.tsbuildinfo plugin/tsconfig.tsbuildinfo",
     "dev": "cd example && npm run prebuild && npm run ios",
     "expo-module": "expo-module",
     "fix": "npm run format && npm run lint && npm run typecheck",
@@ -38,7 +38,7 @@
     "lint": "eslint src plugin/src --fix && swiftlint --fix --quiet && npm run --prefix example lint",
     "open:ios": "xed example/ios",
     "prepare": "patch-package && rm -f node_modules/.bin/prettier && ln -s ../prettier/bin/prettier.cjs node_modules/.bin/prettier && chmod +x node_modules/.bin/prettier && expo-module prepare && EXPO_NONINTERACTIVE=1 expo-module build plugin",
-    "prepublishOnly": "expo-module prepublishOnly",
+    "prepublishOnly": "npm run clean && npm run build && npm run build:plugin && test -f build/index.js && test -f plugin/build/withExpoCarPlay.js",
     "test": "expo-module test",
     "typecheck": "tsc --noEmit && npm run --prefix example typecheck"
   },
