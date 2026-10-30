@@ -10,7 +10,7 @@ Expo module for integrating Apple CarPlay into React Native apps. Provides typed
 npm install @bradford-tech/expo-carplay
 ```
 
-Requires Node 20+, Expo SDK 55+, and iOS 15.0+.
+Requires Node 20+, Expo SDK 58+, and iOS 16.4+. For Expo SDK 55–57 use the 0.4.x line, which predates the scene-based lifecycle.
 
 ## Quick Start
 
@@ -110,11 +110,22 @@ export default function App() {
 
 The module includes an Expo config plugin that automatically configures your iOS project:
 
-- Adds the CarPlay scene manifest to `Info.plist`
+- Adds the CarPlay scene role to the `UIApplicationSceneManifest` in `Info.plist`
 - Adds CarPlay entitlements
-- Bridges the phone scene delegate for multi-scene support
+- Generates a `PhoneSceneDelegate.swift` that subclasses Expo's `ExpoAppSceneDelegate`
 
 No manual Xcode configuration needed — just install and run `npx expo prebuild`.
+Prebuild fails with a clear message on Expo SDK older than 58, or if `AppDelegate.swift` does not adopt `ExpoReactNativeFactoryProvider`.
+
+### Scene lifecycle
+
+Expo SDK 58 runs every app under the UIKit scene-based lifecycle: the generated `SceneDelegate` creates the window and starts React Native when the phone scene connects. CarPlay adds a second scene role, and the two have to agree on who starts React Native:
+
+- **Phone-first launch.** The generated `PhoneSceneDelegate` defers to `ExpoAppSceneDelegate`, which creates the window and starts React Native exactly as a non-CarPlay app would.
+- **CarPlay-first cold launch** (phone locked, only the CarPlay scene connects). `CarPlaySceneDelegate` starts React Native into a scene-less placeholder window stored on the app delegate. When the phone scene connects later, `PhoneSceneDelegate` adopts that window instead of mounting a second React root, and replays any cold-start URL, user activity, or quick action through the scene APIs.
+- The plugin **replaces** the template's phone-scene entry (same configuration name), so plugin order does not matter. The template's `SceneDelegate.swift` still compiles but is never instantiated; other config plugins that edit it as an "extension point" will not take effect.
+- `UIApplicationSupportsMultipleScenes` is left as the template sets it (`false`). Dashboard and instrument-cluster scenes are not supported.
+- CarPlay-first launch of a **development client** build is unverified; `expo-dev-launcher` resolves its window differently. Verify cold-launch behavior on Release builds.
 
 ### Background location (recommended)
 
@@ -382,8 +393,8 @@ The module wraps Apple's CarPlay framework (iOS 12.0 – 26.4) for use from Java
 The module has three layers:
 
 1. **TypeScript API** (`src/`) — Typed functions and React hooks that consumers import from `@bradford-tech/expo-carplay`.
-2. **Swift native module** (`ios/`) — Bridges to Apple's CarPlay framework using Expo modules core. Handles `CPTemplateApplicationSceneDelegate`, `CPMapTemplate`, `CPNavigationSession`, `MKMapView`, and the event pipeline back to JS.
-3. **Expo config plugin** (`plugin/`) — Automatically configures `Info.plist` with the CarPlay scene manifest and adds the required entitlements at prebuild time.
+2. **Swift native module** (`ios/`) — Bridges to Apple's CarPlay framework using Expo modules core. Handles `CPTemplateApplicationSceneDelegate` (including starting React Native on a CarPlay-first launch), `CPMapTemplate`, `CPNavigationSession`, `MKMapView`, and the event pipeline back to JS.
+3. **Expo config plugin** (`plugin/`) — Writes the CarPlay scene role into `Info.plist`, generates the `PhoneSceneDelegate` subclass of `ExpoAppSceneDelegate`, and adds the required entitlements at prebuild time. See [Scene lifecycle](#scene-lifecycle).
 
 The native layer manages the CarPlay map using `MKMapView` with native location tracking. Route polylines are rendered as colored `MKPolyline` overlays. Navigation sessions use `CPTrip`, `CPManeuver`, and `CPTravelEstimates` from the CarPlay framework.
 

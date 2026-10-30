@@ -9,11 +9,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
-  splash: {
-    image: './assets/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#ffffff',
-  },
   plugins: [
     '@bradford-tech/expo-carplay',
     [
@@ -28,6 +23,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'expo.modules.carplay.example',
+    // Development team for `expo run:ios --device` (same team as CartPath).
+    appleTeamId: '7AKC2YS2N2',
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
         'This app needs your location for CarPlay navigation.',
