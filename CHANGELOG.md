@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.5.0...expo-carplay-v0.5.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **release:** rebuild from a clean cache before publishing and fail without build output ([#57](https://github.com/bradford-tech/expo-carplay/issues/57)) ([89495d0](https://github.com/bradford-tech/expo-carplay/commit/89495d052090bf3b06da8958775e3d392b21e96b))
+
 ## [0.5.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.4.1...expo-carplay-v0.5.0) (2026-10-30)
 
 
