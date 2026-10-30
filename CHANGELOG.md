@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.4.1...expo-carplay-v0.5.0) (2026-10-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires Expo SDK 58. Expo SDK 57 and earlier remain on the 0.4.x line.
+
+### Features
+
+* Expo SDK 58 scene lifecycle (0.5.0) ([#55](https://github.com/bradford-tech/expo-carplay/issues/55)) ([889256c](https://github.com/bradford-tech/expo-carplay/commit/889256c27438c7a3ac8168e2e6570507e6f48344))
+
 ## [0.4.1](https://github.com/bradford-tech/expo-carplay/compare/expo-carplay-v0.4.0...expo-carplay-v0.4.1) (2026-09-24)
 
 
