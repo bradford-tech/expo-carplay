@@ -29,7 +29,9 @@ jobs:
             exit 1
           fi
 
-      - run: npx expo-module lint src/
+      # expo-module-scripts 56 dropped its `lint` command; lint runs ESLint directly.
+      - run: npx eslint src plugin/src
       - run: npx tsc --noEmit
-      - run: npx expo-module build
-      - run: npx expo-module build plugin
+      - run: npm test
+      - run: npm run build
+      - run: npm run build:plugin
