@@ -52,7 +52,7 @@
   },
   "devDependencies": {
     "@types/invariant": "^2.2.37",
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.5",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.4",
     "eslint-config-expo": "^58.0.0",
